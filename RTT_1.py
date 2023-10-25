@@ -251,7 +251,7 @@ def report():
     print("\nexcel after appending:")
     print(excel_df)
     print("\n\n")
-    excel_df.to_csv("report.csv")
+    excel_df.to_csv("reports/report.csv")
 
 def complete(fig):
     print(trades)

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, Response, render_template, request
 import plotly.express as px
 import RTT_1 as rtt
 # import AB20 as ab20
@@ -59,6 +59,15 @@ def index():
 
     return render_template('index.html', lines=lines, systems = systems)
 
+@app.route("/getPlotCSV")
+def getPlotCSV():
+    with open("reports/report.csv") as fp:
+        csv = fp.read()
+    return Response(
+        csv,
+        mimetype="text/csv",
+        headers={"Content-disposition":
+                 "attachment; filename=myplot.csv"})
 
 
 if __name__ == '__main__':
