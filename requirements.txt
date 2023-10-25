@@ -1,0 +1,7 @@
+Flask
+Gunicorn
+plotly
+pandas
+yfinance
+matplotlib
+datetime
