@@ -1,75 +1,125 @@
-from flask import Flask, Response, render_template, request
+from flask import Flask, Response, render_template, request, redirect, url_for
 import plotly.express as px
+import pandas as pd
+import os
+import csv
+import futures as fut
+from json import dumps
 import RTT_1 as rtt
-# import AB20 as ab20
+import AB20 as ab20
 
 app = Flask(__name__)
 
-lines = ['Open','Close', 'High', 'Low']
-systems = {1:'RTT', 2:'20 Akasha Bhumi', 3:'Highs Lows'}
 
-@app.route('/', methods=['POST', 'GET'])
+lines = ["Open", "Close", "High", "Low"]
+systems = {1: "RTT", 2: "Akasha Bhumi", 3: "Highs Lows"}
+
+
+@app.route("/", methods=["POST", "GET"])
 def index():
-    if request.method == 'POST':
-        system = request.form.get('system')
-        plot_div = ""
+    if request.method == "POST":
+        system = request.form.get("system")
 
         if system == "1":
-            scripcode = request.form.get('scripcode')
-            start_date = request.form.get('start_date')
-            end_date = request.form.get('end_date')
-            entry_buffer = float(request.form.get('entry_buffer'))
-            exit_buffer = float(request.form.get('exit_buffer'))
-            msl = float(request.form.get('msl'))
-            tsl1 = float(request.form.get('tsl1'))
-            tsl2 = float(request.form.get('tsl2'))
+            scripcode = request.form.get("scripcode")
+            start_date = request.form.get("start_date")
+            end_date = request.form.get("end_date")
+            entry_buffer = float(request.form.get("entry_buffer"))
+            exit_buffer = float(request.form.get("exit_buffer"))
+            msl = float(request.form.get("msl"))
+            tsl1 = float(request.form.get("tsl1"))
+            tsl2 = float(request.form.get("tsl2"))
 
-            
-            info = [scripcode, "Close", entry_buffer, exit_buffer, msl, tsl1, tsl2, start_date, end_date]
+            info = [
+                scripcode,
+                "Close",
+                entry_buffer,
+                exit_buffer,
+                msl,
+                tsl1,
+                tsl2,
+                start_date,
+                end_date,
+            ]
             info = tuple(info)
-            fig = rtt.run(info)
+            excel_df = rtt.run(info)
+            # fig.update_layout(plot_bgcolor='#27293d')
+            # fig.update_layout(paper_bgcolor='#27293d')
+            # fig.update_layout(font_color='#ffffff')
+            # plot_div = excel_df.to_html()
 
-            fig.update_layout(plot_bgcolor='#27293d')
-            fig.update_layout(paper_bgcolor='#27293d')
-            fig.update_layout(font_color='#ffffff')
-                    # Convert the Plotly chart to HTML
-            plot_div = fig.to_html(full_html=False)
+            with open("reports/report.csv", "r") as file:
+                csv_reader = csv.reader(file)
+                data = list(csv_reader)
 
-        # case "2":
-        #     scripcode = request.args.get('scripcode')
-        #     start_date = request.args.get('start_date')
-        #     end_date = request.args.get('end_date')
-        #     entry_buffer = float(request.args.get('entry_buffer'))
-        #     exit_buffer = float(request.args.get('exit_buffer'))
-        #     msl = float(request.args.get('msl'))
-        #     bep = request.args.get('bep')
+            return render_template(
+                "index.html", data=data, lines=lines, systems=systems
+            )
 
-        #     info = [scripcode, "Close", entry_buffer, exit_buffer, " ", msl, bep, start_date, end_date]
-        #     info = tuple(info)
-        #     fig = ab20.run(info)
+        elif system == "2":
+            scripcode = request.form.get("scripcode")
+            start_date = request.form.get("start_date")
+            end_date = request.form.get("end_date")
+            entry_buffer = float(request.form.get("entry_buffer"))
+            exit_buffer = float(request.form.get("exit_buffer"))
+            days = int(request.form.get("days"))
+            msl = float(request.form.get("msl"))
+            bep = request.form.get("bep")
 
+            info = [
+                scripcode,
+                "Close",
+                entry_buffer,
+                exit_buffer,
+                days,
+                msl,
+                bep,
+                start_date,
+                end_date,
+            ]
+            info = tuple(info)
+            excel_df = ab20.run(info)
+            excel_df.to_csv("reports/report.csv", mode="w")
 
-            # info.append(int(input("Enter the value to be considered for simple moving averages ")))
+            with open("reports/report.csv", "r") as file:
+                csv_reader = csv.reader(file)
+                data = list(csv_reader)
 
-            return render_template('index.html', plot_div=plot_div, lines=lines, systems = systems)
+            return render_template(
+                "index.html", data=data, lines=lines, systems=systems
+            )
         else:
             return "FAIL"
-            
 
+    return render_template("index.html", data=None, lines=lines, systems=systems)
 
-    return render_template('index.html', lines=lines, systems = systems)
 
 @app.route("/getPlotCSV")
 def getPlotCSV():
-    with open("reports/report.csv") as fp:
-        csv = fp.read()
-    return Response(
-        csv,
-        mimetype="text/csv",
-        headers={"Content-disposition":
-                 "attachment; filename=myplot.csv"})
+    try:
+        with open("reports/report.csv") as fp:
+            csv = fp.read()
+        return Response(
+            csv,
+            mimetype="text/csv",
+            headers={"Content-disposition": "attachment; filename=myplot.csv"},
+        ), redirect(url_for("index"))
+    except:
+        return redirect(url_for("index"))
 
 
-if __name__ == '__main__':
+@app.route("/getSuggestions")
+def get_suggestions():
+    # Get the user input from the query parameters
+    user_input = request.args.get("input")
+    options = fut.get_all_symbols_list()
+
+    # Filter suggestions from the 'options' list based on user input
+    suggestions = [option for option in options if user_input.lower() in option.lower()]
+
+    # Return the suggestions as a JSON response
+    return dumps(suggestions)
+
+
+if __name__ == "__main__":
     app.run(debug=True)
- 

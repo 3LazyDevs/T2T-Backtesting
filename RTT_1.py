@@ -211,7 +211,7 @@ def trade_exit(exit_buff, trades, val, val_open, val_close, val_high, val_low, i
             trades[-1]["Trade_LS"] = "Exit buffer triggered"  
             trades[-1]["Exit_Date"] = date_val.strftime("%Y-%m-%d")
             trades[-1]["Exit_Value"] = buff_exit
-            fig.add_annotation(x = ind_history[line].index[i + days], y = buff_exit,ax = days,ay= 50, text = "Exit<br>" + str(tsl), showarrow= True,arrowhead= 5,bordercolor="#c7c7c7", borderwidth=2, borderpad=4, bgcolor="#ff7f0e", opacity=0.8)
+            fig.add_annotation(x = ind_history[line].index[i], y = buff_exit,ax = 20,ay= 50, text = "Exit<br>" + str(tsl), showarrow= True,arrowhead= 5,bordercolor="#c7c7c7", borderwidth=2, borderpad=4, bgcolor="#ff7f0e", opacity=0.8)
 
 
     if(trades[-1]["Action"] == "Sell" and (tsl < val_close or tsl < val_high or tsl < val_open or tsl < val_low) and trades[-1]["Trade_LS"] == "Short"): # and (val_open < val_close)
@@ -227,7 +227,7 @@ def trade_exit(exit_buff, trades, val, val_open, val_close, val_high, val_low, i
             trades[-1]["Trade_LS"] = "Exit buffer triggered"  
             trades[-1]["Exit_Date"] = date_val.strftime("%Y-%m-%d")
             trades[-1]["Exit_Value"] = buff_exit
-            fig.add_annotation(x = ind_history[line].index[i + days], y = buff_exit,ax = days,ay= 50, text = "Exit<br>" + str(tsl), showarrow= True,arrowhead= 5,bordercolor="#c7c7c7", borderwidth=2, borderpad=4, bgcolor="#ff7f0e", opacity=0.8)
+            fig.add_annotation(x = ind_history[line].index[i], y = buff_exit,ax = 20,ay= 50, text = "Exit<br>" + str(tsl), showarrow= True,arrowhead= 5,bordercolor="#c7c7c7", borderwidth=2, borderpad=4, bgcolor="#ff7f0e", opacity=0.8)
 
 
 excel_df = pd.DataFrame(columns=["Action","Trade_LS", "Entry_Date", "Prev_Top","Prev_Bottom", "Entry_Value", "Exit_Value", "Exit_Date","Profit_Loss", "Stop_Loss"])
@@ -250,14 +250,11 @@ def report():
         
     print("\nexcel after appending:")
     print(excel_df)
+    excel = excel_df
     print("\n\n")
     excel_df.to_csv("reports/report.csv")
+    return excel
 
-def complete(fig):
-    print(trades)
-    # print(prev_dict)
-    report()
-    fig.update_layout(xaxis_title='Dates', yaxis_title='Price')
 
     # fig.show()
 
@@ -311,6 +308,6 @@ def run(info):
 
             prev_dict = prev_tb(j, fig, ind_vals, ind_date, ind_history, line)
 
-    complete(fig)
-    return fig
+    excel_df = report()
+    return excel_df
     

@@ -18,7 +18,8 @@
 <!-- scripcode -->
             <div class="form-group col-md-6">
                 <label for="scripcode">Scripcode</label>
-                <input type="text" class="form-control" id="scripcode" placeholder="^NSEI" name="scripcode">
+                <input type="text" class="form-control" id="scripcode" placeholder="^NSEI" name="scripcode" required oninput="getSuggestions(this.value)">
+                <div id="suggestions-box" class="suggestions-box"></div>
             </div>
 <!-- system -->
             <div class="form-group col-md-6">
@@ -38,24 +39,24 @@
 <!-- start date -->
             <div class="form-group col-md-6">
                 <label for="start_date">Start Date</label>
-                <input type="date" class="form-control" id="start_date" name="start_date" placeholder="YYYY-MM-DD">
+                <input type="date" class="form-control" id="start_date" name="start_date" placeholder="YYYY-MM-DD" required>
             </div>
 <!-- end date -->
             <div class="form-group col-md-6">
                 <label for="end_date">End Date</label>
-                <input type="date" class="form-control" id="end_date" name="end_date" placeholder="YYYY-MM-DD">
+                <input type="date" class="form-control" id="end_date" name="end_date" placeholder="YYYY-MM-DD" required>
             </div>
         </div>
 <!-- entry buffer -->
         <div class="form-row">
           <div class="form-group col-md-6">
             <label for="entry_buffer">Entry Buffer</label>
-            <input type="number" class="form-control" id="buffer" min="0" step="0.1" name="entry_buffer">
+            <input type="number" class="form-control" id="entry_buffer" min="0" step="0.1" name="entry_buffer">
           </div>
 <!-- exit buffer -->
           <div class="form-group col-md-6">
             <label for="exit_buffer">Exit Buffer</label>
-            <input type="number" class="form-control" id="buffer" min="0" step="0.1" name="exit_buffer">
+            <input type="number" class="form-control" id="entry_buffer" min="0" step="0.1" name="exit_buffer">
           </div>
          
         </div>
@@ -64,16 +65,20 @@
 <!-- MSL -->
             <div class="form-group col-md stop-loss-group">
                 <label for="msl">Monetary Stop Loss (%)</label>
-                <input type="number" class="form-control" id="msl" name="msl" min="0" step="0.1">
+                <input type="number" class="form-control" id="msl" name="msl" min="0" step="0.01">
             </div>
 <!-- TSL -->
             <div class="form-group col-md stop-loss-group">
                 <label for="tsl1">Technical Stop Loss (%) - Day 1</label>
-                <input type="number" class="form-control" id="tsl1" name="tsl1" min="0" step="0.1">
+                <input type="number" class="form-control" id="tsl1" name="tsl1" min="0" step="0.01">
             </div>
             <div class="form-group col-md stop-loss-group">
                 <label for="tsl2">Technical Stop Loss (%) - Day 2 onwards</label>
-                <input type="number" class="form-control" id="tsl2" name="tsl2" min="0" step="0.1">
+                <input type="number" class="form-control" id="tsl2" name="tsl2" min="0" step="0.01">
+            </div>
+            <div class="form-group col-md stop-loss-group">
+              <label for="days">Day Averages</label>
+              <input type="number" class="form-control" id="days" name="days" min="0" step="1">
             </div>
         </div>
 <!-- line choose  -->
@@ -150,28 +155,93 @@
   </div>
 
 <!-- example chart -->
-<div class="content">
-    <div class="row">
-      <div class="col-12">
-        <div class="card card-chart">
-          <div class="card-header ">
-            <div class="row">
-              <div class="col-sm-6 text-left">
-                <!-- <h5 class="card-category" >{{line |default('')}}</h5>
-                <h2 class="card-title" >^NSEI</h2> -->
+{% if data %}
+  <div class="content">
+      <div class="row">
+        <div class="col-12">
+          <div class="card card-chart">
+            <div class="card-header ">
+              <div class="row">
+                <div class="col-sm-6 text-left">
+                  <!-- <h5 class="card-category" >{{line |default('')}}</h5>
+                  <h2 class="card-title" >^NSEI</h2> -->
+                </div>
               </div>
             </div>
-          </div>
-          <div class="card-body">
-            <div id="plotly-chart">
-              {{ plot_div|safe|default('') }}
+            <div class="card-body">
+              <div id="plotly-chart">
+                <table border="1">
+                  {% for row in data %}
+                      <tr>
+                          {% for cell in row %}
+                              <td>{{ cell }}</td>
+                          {% endfor %}
+                      </tr>
+                  {% endfor %}
+                </table>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-</div>
+  </div>
+{% endif %}
 <script src="static\js\conditions.js"></script>
+<script>
+  function getSuggestions(input) {
+    // Get the suggestions box element
+    var suggestionsBox = document.getElementById("suggestions-box");
+
+    // Hide the suggestions box if the input is empty
+    if (input.trim() === '') {
+        suggestionsBox.style.display = "none";
+        return;
+    }
+    
+    // Make an AJAX request to the server with the user input
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/getSuggestions?input=" + input, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            // Parse the JSON response from the server
+            var suggestions = JSON.parse(xhr.responseText);
+            
+            // Clear previous suggestions
+            suggestionsBox.innerHTML = "";
+            
+            // Populate the suggestions box with new suggestions
+            suggestions.forEach(function(suggestion) {
+                var suggestionItem = document.createElement("div");
+                suggestionItem.textContent = suggestion;
+                suggestionItem.classList.add("suggestion-item");
+                
+                // Handle suggestion item click (optional)
+                suggestionItem.addEventListener("click", function() {
+                    document.getElementById("scripcode").value = suggestion;
+                    suggestionsBox.style.display = "none";
+                });
+                
+                suggestionsBox.appendChild(suggestionItem);
+            });
+            
+            // Show the suggestions box
+            suggestionsBox.style.display = "block";
+        }
+    };
+    xhr.send();
+}
+
+</script>
+<script>
+  // Check if the page was loaded from a form submission
+if (window.history.replaceState) {
+  // Prevent form resubmission and perform a hard refresh
+  window.history.replaceState(null, null, window.location.href);
+} else {
+  // If window.history.replaceState is not supported, fallback to a regular reload
+  window.location.href = window.location.href;
+}
+</script>
 {% endblock %}
 
 
