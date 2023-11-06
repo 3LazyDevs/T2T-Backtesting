@@ -1,4 +1,12 @@
-from flask import Flask, Response, render_template, request, redirect, url_for
+from flask import (
+    Flask,
+    Response,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    send_file,
+)
 import plotly.express as px
 import pandas as pd
 import os
@@ -13,6 +21,7 @@ app = Flask(__name__)
 
 lines = ["Open", "Close", "High", "Low"]
 systems = {1: "RTT", 2: "Akasha Bhumi", 3: "Highs Lows"}
+criteria = ["2 Days", "3 Days", "4 Days", "1 Week", "2 Weeks"]
 
 
 @app.route("/", methods=["POST", "GET"])
@@ -26,7 +35,7 @@ def index():
             end_date = request.form.get("end_date")
             entry_buffer = float(request.form.get("entry_buffer"))
             exit_buffer = float(request.form.get("exit_buffer"))
-            msl = float(request.form.get("msl"))
+            # msl = float(request.form.get("msl"))
             tsl1 = float(request.form.get("tsl1"))
             tsl2 = float(request.form.get("tsl2"))
 
@@ -35,7 +44,7 @@ def index():
                 "Close",
                 entry_buffer,
                 exit_buffer,
-                msl,
+                "5",
                 tsl1,
                 tsl2,
                 start_date,
@@ -48,16 +57,21 @@ def index():
             # fig.update_layout(font_color='#ffffff')
             # plot_div = excel_df.to_html()
 
-            with open("reports/report.csv", "r") as file:
-                csv_reader = csv.reader(file)
-                data = list(csv_reader)
+            # with open("reports/report.csv", "r") as file:
+            #     csv_reader = csv.reader(file)
+            #     data = list(csv_reader)
 
             return render_template(
-                "index.html", data=data, lines=lines, systems=systems
+                "index.html",
+                data=None,
+                lines=lines,
+                systems=systems,
+                downflag=True,
             )
 
         elif system == "2":
             scripcode = request.form.get("scripcode")
+            scripcode = scripcode.split()[0]
             start_date = request.form.get("start_date")
             end_date = request.form.get("end_date")
             entry_buffer = float(request.form.get("entry_buffer"))
@@ -79,32 +93,57 @@ def index():
             ]
             info = tuple(info)
             excel_df = ab20.run(info)
-            excel_df.to_csv("reports/report.csv", mode="w")
 
-            with open("reports/report.csv", "r") as file:
-                csv_reader = csv.reader(file)
-                data = list(csv_reader)
+            excel_df.to_csv("reports/report.csv")
+
+            # with open("reports/report.csv", "r") as file:
+            #     csv_reader = csv.reader(file)
+            #     data = list(csv_reader)
 
             return render_template(
-                "index.html", data=data, lines=lines, systems=systems
+                "index.html", data=None, lines=lines, systems=systems, downflag=True
+            )
+
+        elif system == "3":
+            return render_template(
+                "index.html",
+                data=None,
+                lines=lines,
+                systems=systems,
+                downflag=True,
+                criteria=criteria,
             )
         else:
             return "FAIL"
 
-    return render_template("index.html", data=None, lines=lines, systems=systems)
+    return render_template(
+        "index.html",
+        data=None,
+        lines=lines,
+        systems=systems,
+        downflag=False,
+    )
 
 
 @app.route("/getPlotCSV")
 def getPlotCSV():
     try:
-        with open("reports/report.csv") as fp:
-            csv = fp.read()
-        return Response(
-            csv,
+        # Read the CSV file content as a string
+        with open("reports/report.csv", "r") as fp:
+            csv_content = fp.read()
+
+        # Send the CSV file as a response
+        response = send_file(
+            "reports/report.csv",
             mimetype="text/csv",
-            headers={"Content-disposition": "attachment; filename=myplot.csv"},
-        ), redirect(url_for("index"))
-    except:
+            as_attachment=True,
+            download_name="myplot.csv",
+        )
+
+        return response
+
+    except Exception as e:
+        print(f"Error: {e}")
         return redirect(url_for("index"))
 
 

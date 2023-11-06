@@ -18,7 +18,7 @@
 <!-- scripcode -->
             <div class="form-group col-md-6">
                 <label for="scripcode">Scripcode</label>
-                <input type="text" class="form-control" id="scripcode" placeholder="^NSEI" name="scripcode" required oninput="getSuggestions(this.value)">
+                <input type="text" class="form-control" id="scripcode" placeholder="TCS FUT" name="scripcode" required oninput="getSuggestions(this.value)">
                 <div id="suggestions-box" class="suggestions-box"></div>
             </div>
 <!-- system -->
@@ -47,19 +47,45 @@
                 <input type="date" class="form-control" id="end_date" name="end_date" placeholder="YYYY-MM-DD" required>
             </div>
         </div>
+
+        <div class="form-row">
+          <div class="form-group col-md criteria-group">
+            <label for="entry_criteria">Entry Criteria</label>
+            <br>
+            <select class="form-control" aria-label="Default select example" id="entry_criteria" name="entry_criteria">
+              <option selected value="0" style="color: black;">Select a criteria</option>
+              {% for key in criteria %}
+              <option value="{{key}}" style="color: black;">{{key}}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group col-md criteria-group">
+            <label for="exit_criteria">Exit Criteria</label>
+            <br>
+            <select class="form-control" aria-label="Default select example" id="exit_criteria" name="exit_criteria">
+              <option selected value="0" style="color: black;">Select a criteria</option>
+              {% for key in criteria %}
+              <option value="{{key}}" style="color: black;">{{key}}</option>
+              {% endfor %}
+            </select>
+            <br>
+          </div>
+        </div>
+
 <!-- entry buffer -->
         <div class="form-row">
           <div class="form-group col-md-6">
             <label for="entry_buffer">Entry Buffer</label>
-            <input type="number" class="form-control" id="entry_buffer" min="0" step="0.1" name="entry_buffer">
+            <input type="number" class="form-control" id="entry_buffer" min="0" step="0.01" name="entry_buffer" required>
           </div>
 <!-- exit buffer -->
           <div class="form-group col-md-6">
             <label for="exit_buffer">Exit Buffer</label>
-            <input type="number" class="form-control" id="entry_buffer" min="0" step="0.1" name="exit_buffer">
+            <input type="number" class="form-control" id="entry_buffer" min="0" step="0.01" name="exit_buffer" required>
           </div>
          
         </div>
+        
 
         <div class="form-row">
 <!-- MSL -->
@@ -146,9 +172,11 @@
         <div style="display:inline-block;">
           <button type="submit" class="btn btn-warning btn-simple" id="search" name="search">Search</button>
         </div>
-        <div class="download" style="float: right">
-          <a href="/getPlotCSV"><button type="button" class="btn btn-warning btn-simple" id="download" name="download">Download .csv</button></a>
-        </div>
+        {% if downflag %}
+          <div class="download" style="float: right">
+            <a href="/getPlotCSV"><button type="button" class="btn btn-warning btn-simple" id="download" name="download">Download .csv</button></a>
+          </div>
+        {% endif %}
         
       </form>
     </div>
@@ -187,6 +215,19 @@
   </div>
 {% endif %}
 <script src="static\js\conditions.js"></script>
+<script>
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById("start_date").setAttribute("max", today);
+  document.getElementById("end_date").setAttribute("max", today);
+</script>
+
+<script>
+  document.getElementById("start_date").addEventListener("change", function() {
+    var start_date = document.getElementById("start_date").value;
+    document.getElementById("end_date").setAttribute("min", start_date);
+  });
+</script>
+
 <script>
   function getSuggestions(input) {
     // Get the suggestions box element

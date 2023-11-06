@@ -8,8 +8,8 @@ import csv
 import plotly.express as px
 import plotly.graph_objects as go
 
-prev_hl = {"High": 0, "Low": 0}
 global sma
+prev_hl = {"High": 0, "Low": 0}
 sma = []
 excel_df = pd.DataFrame(
     columns=[
@@ -451,10 +451,10 @@ def report():
     print(excel_df)
     print("\n\n")
 
-    try:
-        os.remove("reports/report.csv")
-    except:
-        pass
+    # try:
+    #     os.remove("reports/report.csv")
+    # except:
+    #     pass
     # with open("reports/report.csv", 'w', newline='') as csvfile:
     # # Create a CSV writer object
     #     csv_writer = csv.writer(csvfile)

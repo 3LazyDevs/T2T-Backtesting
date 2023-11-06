@@ -60,8 +60,8 @@ def futures(symbol, start_date, end_date):
 
 
 def get_futures_prices(symbol, start, end):
-    start = datetime.datetime.strptime(start, "%d-%m-%Y")
-    end = datetime.datetime.strptime(end, "%d-%m-%Y")
+    start = datetime.datetime.strptime(start, "%Y-%m-%d")
+    end = datetime.datetime.strptime(end, "%Y-%m-%d")
     res_date = start
     dates = []
     dataset = pd.DataFrame()
@@ -117,6 +117,7 @@ def get_futures_prices(symbol, start, end):
             "FH_CLOSING_PRICE": "Close",
             "FH_TRADE_LOW_PRICE": "Low",
             "FH_EXPIRY_DT": "Expiry Date",
+            "FH_MARKET_LOT": "Lot Size",
         },
         inplace=True,
     )
@@ -180,5 +181,7 @@ def get_all_symbols_list():
     for i in range(len(f_dict["data"])):
         eq_list.append(f'{f_dict["data"][i]["metadata"]["symbol"]} FUT')
         eq_list.append(f'{f_dict["data"][i]["metadata"]["symbol"]} EQ')
-
-    return eq_list + cns.INDICES
+    for item in cns.INDICES:
+        eq_list.append(f"{item} FUT")
+        eq_list.append(f"{item} EQ")
+    return eq_list
