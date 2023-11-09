@@ -283,6 +283,34 @@ if (window.history.replaceState) {
   window.location.href = window.location.href;
 }
 </script>
+<script>
+  // Add event listener to the download button
+  document.getElementById("download").addEventListener("click", function(event) {
+    // Prevent default behavior of the anchor tag
+    event.preventDefault();
+
+    // Create a new anchor element
+    var downloadLink = document.createElement("a");
+    
+    // Set the href attribute to the download endpoint URL
+    downloadLink.href = "/getPlotCSV";
+    
+    // Set the download attribute to specify the file name
+    downloadLink.download = "myreport.csv";
+    
+    // Append the anchor element to the body
+    document.body.appendChild(downloadLink);
+    
+    // Programmatically trigger a click event on the anchor element
+    downloadLink.click();
+    
+    // Remove the anchor element from the DOM
+    document.body.removeChild(downloadLink);
+    
+    // Reload the page after the download is initiated
+    location.reload();
+  });
+</script>
 {% endblock %}
 
 

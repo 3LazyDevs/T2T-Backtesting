@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import plotly.express as px
 import plotly.graph_objects as go
+import csv
 
 # global prev_dict
 global excel_dict
@@ -22,6 +23,7 @@ msl = 0
 prev_dict = {"Top": 0, "Bottom": 0}
 prev_hl = {"HH": 0, "LL": float("inf")}
 trades = []
+anomaly = False
 
 
 # Calculate previous top and previous bottom
@@ -33,7 +35,7 @@ def prev_tb(i, fig, ind_vals, ind_date, ind_history, line):
         # (for bottom: present value should be less than previous value and next value)
         try:
             if (ind_vals[i - 1] < ind_vals[i]) and (ind_vals[i + 1] < ind_vals[i]):
-                print(ind_vals[i], "Top", str(ind_date[i]))
+                # print(ind_vals[i], "Top", str(ind_date[i]))
                 fig.add_trace(
                     go.Scatter(
                         x=[ind_history[line].index[i]],
@@ -45,9 +47,11 @@ def prev_tb(i, fig, ind_vals, ind_date, ind_history, line):
                     )
                 )
                 # fig.add_annotation(x = ind_history[line].index[i], y = ind_history[line][i], text = "Top<br>" + str(ind_vals[i]), showarrow= True)
+                # if(ind_date[i].strftime('%Y-%m-%d') < "2021-3-23" and ind_date[i].strftime('%Y-%m-%d') > "2021-4-7" ):
+                print(ind_vals[i - 1], ind_vals[i], ind_vals[i + 1], ind_date[i])
                 prev_dict["Top"] = ind_vals[i]
             if (ind_vals[i - 1] > ind_vals[i]) and (ind_vals[i + 1] > ind_vals[i]):
-                print(ind_vals[i], "Bottom", str(ind_date[i]))
+                # print(ind_vals[i], "Bottom", str(ind_date[i]))
                 fig.add_trace(
                     go.Scatter(
                         x=[ind_history[line].index[i]],
@@ -85,8 +89,9 @@ def trade(
     line,
 ):
     global day_count
+    global anomaly
     candle = None
-    print(type(prev_dict["Top"]), type(entry_buff))
+    # print(type(prev_dict["Top"]), type(entry_buff))
     trade_date, trade_action, trade_ls = ind_date[i], "null", "null"
     buff_top = prev_dict["Top"] * entry_buff * 0.01  # buffer to exeute buy
     buff_bottom = prev_dict["Bottom"] * entry_buff * 0.01  # buffer to execute sell
@@ -112,8 +117,12 @@ def trade(
             if (val_open > buffer_high or val_high > buffer_high) and (
                 val_open < buffer_low or val_low < buffer_low
             ):
-                print("anomaly")
+                # print("anomaly")
+                anomaly = True
                 check_backtesting_anomaly(
+                    tsl_2,
+                    exit_buff,
+                    entry_buff,
                     tsl_1,
                     ind_date,
                     buffer_high,
@@ -130,40 +139,8 @@ def trade(
                     ind_history,
                     line,
                 )
-
+                anomaly = False
             else:
-                try:
-                    if (
-                        trades[-1]["Action"] == "Sell"
-                        and trades[-1]["Trade_LS"] == "Short"
-                    ):
-                        day_count += 1
-                        tsl = trades[-1]["Stop_Loss"]
-                        sell = trades[-1]["Entry_Value"]
-                        tsl = sell + (sell * tsl_2 * 0.01)
-                        trades[-1]["Stop_Loss"] = round(tsl, 2)
-                        trade_exit(
-                            entry_buff,
-                            exit_buff,
-                            trades,
-                            val,
-                            val_open,
-                            val_close,
-                            val_high,
-                            val_low,
-                            ind_date,
-                            buffer_high,
-                            buffer_low,
-                            msl,
-                            i,
-                            candle,
-                            fig,
-                            prev_dict,
-                            ind_history,
-                            line,
-                        )
-                except Exception as e:
-                    print("Caught at 1st exit", e)
                 # check OHLC for buying
                 if val_open >= (buffer_high) or val_high >= (buffer_high):
                     if (trades) and (
@@ -172,7 +149,49 @@ def trade(
                     ):  # print("Hold")
                         pass
                     else:
+                        try:
+                            if (
+                                trades[-1]["Action"] == "Sell"
+                                and trades[-1]["Trade_LS"] == "Short"
+                            ):
+                                day_count += 1
+                                tsl = trades[-1]["Stop_Loss"]
+                                sell = trades[-1]["Entry_Value"]
+                                if tsl == sell:
+                                    pass
+                                else:
+                                    threshold = sell - (sell * tsl_2 * 0.01)
+                                    if val_low <= threshold:
+                                        tsl = sell
+                                    else:
+                                        if day_count > 1:
+                                            tsl = sell + (sell * tsl_2 * 0.01)
+
+                                    trades[-1]["Stop_Loss"] = round(tsl, 2)
+                                trade_exit(
+                                    entry_buff,
+                                    exit_buff,
+                                    trades,
+                                    val,
+                                    val_open,
+                                    val_close,
+                                    val_high,
+                                    val_low,
+                                    ind_date,
+                                    buffer_high,
+                                    buffer_low,
+                                    msl,
+                                    i,
+                                    candle,
+                                    fig,
+                                    prev_dict,
+                                    ind_history,
+                                    line,
+                                )
+                        except:
+                            pass
                         Buy(
+                            tsl_2,
                             tsl_1,
                             ind_date,
                             val_open,
@@ -198,7 +217,7 @@ def trade(
                     if tsl == buy:
                         pass
                     else:
-                        threshold = buy + (buy * 0.02)
+                        threshold = buy + (buy * tsl_2 * 0.01)
                         if val_high >= threshold:
                             tsl = buy
                         else:
@@ -244,6 +263,7 @@ def trade(
                     else:
                         # print("Entered Sell")
                         Sell(
+                            tsl_2,
                             tsl_1,
                             ind_date,
                             val_open,
@@ -269,8 +289,8 @@ def trade(
                     if tsl == sell:
                         pass
                     else:
-                        threshold = sell - (sell * 0.02)
-                        if val_high <= threshold:
+                        threshold = sell - (sell * tsl_2 * 0.01)
+                        if val_low <= threshold:
                             tsl = sell
                         else:
                             if day_count > 1:
@@ -304,13 +324,14 @@ def trade(
                         line,
                     )
 
-                print(f"day_count = {day_count}")
+                # print(f"day_count = {day_count}")
 
         except Exception as e:
             print(e)
 
 
 def Buy(
+    tsl_2,
     tsl_1,
     ind_date,
     val_open,
@@ -328,7 +349,7 @@ def Buy(
         trades[-1]["HH/LL"] = val_low
 
     prev_hl["HH"] = val_high
-    print("Buy", ind_date[i])
+    # print("Buy", ind_date[i])
     # print(trades)
     # msl =  buffer_high - (buffer_high * risk_percent * 0.01)
     buy = buffer_high
@@ -337,7 +358,7 @@ def Buy(
         buy = val_open
 
     tsl = buy - (buy * tsl_1 * 0.01)
-    threshold = buy + (buy * 0.02)
+    threshold = buy + (buy * tsl_2 * 0.01)
     if val_high >= threshold:
         tsl = buy
     # fig.add_trace(go.Scatter(x=[ind_history[line].index[i]], y=[buy], mode='markers', marker=dict(color='blue', size=12),showlegend=False, text=f"Action: Buy<br>Entry: {buy}<br>Date: {ind_date[i].strftime('%Y-%m-%d')}"))
@@ -369,6 +390,7 @@ def Buy(
 
 
 def Sell(
+    tsl_2,
     tsl_1,
     ind_date,
     val_open,
@@ -385,14 +407,14 @@ def Sell(
         trades[-1]["HH/LL"] = val_high
 
     prev_hl["LL"] = val_low
-    print("Sell", ind_date[i])
+    # print("Sell", ind_date[i])
     # print(trades)
     # msl =  buffer_low + (buffer_low * risk_percent * 0.01)
     sell = buffer_low
     if buffer_low > val_high:
         sell = val_open
     tsl = sell + (sell * tsl_1 * 0.01)
-    threshold = sell - (sell * 0.02)
+    threshold = sell - (sell * tsl_2 * 0.01)
     if val_low <= threshold:
         tsl = sell
     # fig.add_trace(go.Scatter(x=[ind_history[line].index[i]], y=[sell], mode='markers', marker=dict(color='yellow', size=12),showlegend=False, text=f"Action: Sell<br>Entry: {sell}<br>Date: {ind_date[i].strftime('%Y-%m-%d')}"))
@@ -424,6 +446,9 @@ def Sell(
 
 
 def check_backtesting_anomaly(
+    tsl_2,
+    exit_buff,
+    entry_buff,
     tsl_1,
     ind_date,
     buffer_high,
@@ -446,7 +471,28 @@ def check_backtesting_anomaly(
         ):
             pass
         else:
+            trade_exit(
+                entry_buff,
+                exit_buff,
+                trades,
+                val,
+                val_open,
+                val_close,
+                val_high,
+                val_low,
+                ind_date,
+                buffer_high,
+                buffer_low,
+                msl,
+                i,
+                candle,
+                fig,
+                prev_dict,
+                ind_history,
+                line,
+            )
             Sell(
+                tsl_2,
                 tsl_1,
                 ind_date,
                 val_open,
@@ -459,8 +505,28 @@ def check_backtesting_anomaly(
                 ind_history,
                 line,
             )
-
+        trade_exit(
+            entry_buff,
+            exit_buff,
+            trades,
+            val,
+            val_open,
+            val_close,
+            val_high,
+            val_low,
+            ind_date,
+            buffer_high,
+            buffer_low,
+            msl,
+            i,
+            candle,
+            fig,
+            prev_dict,
+            ind_history,
+            line,
+        )
         Buy(
+            tsl_2,
             tsl_1,
             ind_date,
             val_open,
@@ -480,7 +546,28 @@ def check_backtesting_anomaly(
         ):  # print("Hold")
             pass
         else:
+            trade_exit(
+                entry_buff,
+                exit_buff,
+                trades,
+                val,
+                val_open,
+                val_close,
+                val_high,
+                val_low,
+                ind_date,
+                buffer_high,
+                buffer_low,
+                msl,
+                i,
+                candle,
+                fig,
+                prev_dict,
+                ind_history,
+                line,
+            )
             Buy(
+                tsl_2,
                 tsl_1,
                 ind_date,
                 val_open,
@@ -494,7 +581,28 @@ def check_backtesting_anomaly(
                 line,
             )
 
+        trade_exit(
+            entry_buff,
+            exit_buff,
+            trades,
+            val,
+            val_open,
+            val_close,
+            val_high,
+            val_low,
+            ind_date,
+            buffer_high,
+            buffer_low,
+            msl,
+            i,
+            candle,
+            fig,
+            prev_dict,
+            ind_history,
+            line,
+        )
         Sell(
+            tsl_2,
             tsl_1,
             ind_date,
             val_open,
@@ -530,22 +638,25 @@ def trade_exit(
     line,
 ):
     global prev_hl
+    global anomaly
     tsl = trades[-1]["Stop_Loss"]
-    print(f"tsl = {tsl}, date = {ind_date[i].strftime('%Y-%m-%d')}")
-    print(trades[-1]["Action"], trades[-1]["Trade_LS"])
+    # print(f"tsl = {tsl}, date = {ind_date[i].strftime('%Y-%m-%d')}")
+    # print(trades[-1]["Action"], trades[-1]["Trade_LS"])
     if (
         trades[-1]["Action"] == "Buy" and trades[-1]["Trade_LS"] == "Long"
     ):  # and (val_open > val_close)#
         if (
-            ind_date[i].strftime("%Y-%m-%d") == trades[-1]["Entry_Date"]
-        ) and candle == "Green":
+            (ind_date[i].strftime("%Y-%m-%d") == trades[-1]["Entry_Date"])
+            and candle == "Green"
+            and (not anomaly)
+        ):
             pass
         else:
-            print("Entered buy exit")
+            # print("Entered buy exit")
             buff_exit = prev_dict["Bottom"] - (prev_dict["Bottom"] * exit_buff * 0.01)
-            sl = max(tsl, buffer_low)
+            sl = max(tsl, buff_exit)
             if sl > val_open or sl > val_low or sl > val_high or sl > val_close:
-                if sl < val_low or sl > val_high:
+                if sl < val_low or sl > val_high or sl > val_open:
                     trades[-1]["Exit_Value"] = val_open
                     sl = val_open
                 else:
@@ -559,7 +670,7 @@ def trade_exit(
                 if sl == tsl:
                     trades[-1]["Trade_LS"] = "TSL"
                 else:
-                    trades[-1]["Trade_LS"] = "TSL"
+                    trades[-1]["Trade_LS"] = "SAR"
                 # fig.add_trace(go.Scatter(x=[ind_history[line].index[i]], y=[tsl], mode='markers', marker=dict(color='#000', size=12,line=dict(width=2, color='#c7c7c7')),showlegend=False, text=f"Action: Exit Buy<br>Exit Value: {tsl}<br>Date: {ind_date[i].strftime('%Y-%m-%d')}"))
                 fig.add_annotation(
                     x=ind_history[line].index[i],
@@ -580,16 +691,18 @@ def trade_exit(
         trades[-1]["Action"] == "Sell" and trades[-1]["Trade_LS"] == "Short"
     ):  # and (val_open < val_close)
         if (
-            ind_date[i].strftime("%Y-%m-%d") == trades[-1]["Entry_Date"]
-        ) and candle == "Red":
+            (ind_date[i].strftime("%Y-%m-%d") == trades[-1]["Entry_Date"])
+            and candle == "Red"
+            and (not anomaly)
+        ):
             pass
         else:
-            print("Entered sell exit")
+            # print("Entered sell exit")
             buff_exit = prev_dict["Top"] + (prev_dict["Top"] * exit_buff * 0.01)
-            print("Entered Sell exit")
-            sl = min(tsl, buffer_high)
+            # print("Entered Sell exit")
+            sl = min(tsl, buff_exit)
             if sl < val_close or sl < val_high or sl < val_open or sl < val_low:
-                if sl < val_low or sl > val_high:
+                if sl < val_low or sl > val_high or sl < val_open:
                     trades[-1]["Exit_Value"] = val_open
                     sl = val_open
                 else:
@@ -604,7 +717,7 @@ def trade_exit(
                 if sl == tsl:
                     trades[-1]["Trade_LS"] = "TSL"
                 else:
-                    trades[-1]["Trade_LS"] = "TSL"
+                    trades[-1]["Trade_LS"] = "SAR"
                 # fig.add_trace(go.Scatter(x=[ind_history[line].index[i]], y=[tsl], mode='markers', marker=dict(color='#000', size=12,line=dict(width=2, color='#c7c7c7')),showlegend=False, text=f"Action: Exit Sell<br>Exit Value: {tsl}<br>Date: {ind_date[i].strftime('%Y-%m-%d')}"))
                 fig.add_annotation(
                     x=ind_history[line].index[i],
@@ -701,7 +814,10 @@ def report(index, lot_size):
     excel = excel_df
     print("\n\n")
     excel_df = excel_df.drop(["Prev_Top", "Prev_Bottom", "Stop_Loss"], axis=1)
-    excel_df = excel_df.iloc[:, [2, 5, 0, 9, 3, 4, 6, 10, 1, 7, 8]]
+    if index[1] == "FUT":
+        excel_df = excel_df.iloc[:, [11, 2, 5, 0, 9, 3, 4, 6, 10, 1, 7, 8]]
+    else:
+        excel_df = excel_df.iloc[:, [10, 2, 5, 0, 3, 4, 6, 9, 1, 7, 8]]
     excel_df.rename(
         columns={
             "Entry_Date": "Entry Date",
@@ -715,14 +831,18 @@ def report(index, lot_size):
         },
         inplace=True,
     )
+    excel_df.index += 1
     excel_df.to_csv("reports/report.csv")
-    return excel_df
+
+    return excel
 
 
 def set_up():
     global trades
     global excel_df
     global prev_dict
+    global anomaly
+    anomaly = False
     prev_dict = {"Top": 0, "Bottom": 0}
     prev_hl = {"HH": 0, "LL": float("inf")}
     excel_df = pd.DataFrame(
@@ -782,8 +902,9 @@ def run(info):
     ind_close = [
         float(ele) for ele in pd.Series.tolist(ind_history["Close"])
     ]  # close values
-    lot_size = [float(ele) for ele in pd.Series.tolist(ind_history["Lot Size"])]
-    lot_size = lot_size[-1]
+    if index[1] == "FUT":
+        lot_size = [float(ele) for ele in pd.Series.tolist(ind_history["Lot Size"])]
+        lot_size = lot_size[-1]
 
     print("data type = ", type(ind_open[0]))
 
@@ -838,11 +959,10 @@ def run(info):
                 print(e)
 
             prev_dict = prev_tb(j, fig, ind_vals, ind_date, ind_history, line)
-
-    excel_df = report(index, lot_size)
+    if index[1] == "FUT":
+        excel_df = report(index, lot_size)
+    else:
+        excel_df = report(index, 1)
     # fig.show()
 
     return excel_df
-
-
-# run(("NIFTY FUT", "Close", 0.20, 0.15, 5, 1.5, 2, "01-01-2021", "31-12-2022"))

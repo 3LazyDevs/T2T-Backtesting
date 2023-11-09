@@ -11,6 +11,7 @@ import plotly.express as px
 import pandas as pd
 import os
 import csv
+from datetime import datetime as dt
 import futures as fut
 from json import dumps
 import RTT_1 as rtt
@@ -57,9 +58,45 @@ def index():
             # fig.update_layout(font_color='#ffffff')
             # plot_div = excel_df.to_html()
 
-            # with open("reports/report.csv", "r") as file:
-            #     csv_reader = csv.reader(file)
-            #     data = list(csv_reader)
+            with open("reports/report.csv", "r", newline="") as input_file:
+                # Create a csv.reader object
+                csv_reader = csv.reader(input_file)
+
+                # Read data from the input CSV file
+                data = list(csv_reader)
+
+            with open("reports/report.csv", "w", newline="") as output_file:
+                # Create a csv.writer object
+                csv_writer = csv.writer(output_file)
+
+                # Add contents of list as last row in the csv file
+                csv_writer.writerow(
+                    [
+                        "",
+                        "Scripcode",
+                        "Start Date",
+                        "End Date",
+                        "Entry Buffer",
+                        "Exit Buffer",
+                        "TSL1",
+                        "TSL2",
+                    ]
+                )
+                csv_writer.writerow(
+                    [
+                        "",
+                        scripcode,
+                        start_date,
+                        end_date,
+                        entry_buffer,
+                        exit_buffer,
+                        tsl1,
+                        tsl2,
+                    ]
+                )
+                csv_writer.writerow([""] * len(data[0]))
+                csv_writer.writerow([""] * len(data[0]))
+                csv_writer.writerows(data)
 
             return render_template(
                 "index.html",
@@ -67,6 +104,8 @@ def index():
                 lines=lines,
                 systems=systems,
                 downflag=True,
+                system="RTT",
+                scripcode=scripcode,
             )
 
         elif system == "2":
@@ -131,13 +170,17 @@ def getPlotCSV():
         # Read the CSV file content as a string
         with open("reports/report.csv", "r") as fp:
             csv_content = fp.read()
+            csv_system = csv_content.split("\n")[5].split(",")[1]
+            csv_scrip = csv_content.split("\n")[1].split(",")[1]
+            csv_sdate = csv_content.split("\n")[1].split(",")[2]
+            csv_edate = csv_content.split("\n")[1].split(",")[3]
 
         # Send the CSV file as a response
         response = send_file(
             "reports/report.csv",
             mimetype="text/csv",
             as_attachment=True,
-            download_name="myplot.csv",
+            download_name=f"{csv_system}-{csv_scrip} {csv_sdate}_{csv_edate}.csv",
         )
 
         return response
@@ -161,4 +204,5 @@ def get_suggestions():
 
 
 if __name__ == "__main__":
+    # app.run(host="0.0.0.0", port=5000)
     app.run(debug=True)

@@ -28,35 +28,35 @@ def futures(symbol, start_date, end_date):
     cookies = utils.get_cookies()
     url = base_url + event_api + urllib.parse.urlencode(params)
     data = utils.fetch_url(url, cookies, response_type="json")
+    if data["data"]:
+        new_data = pd.json_normalize(data["data"])
 
-    new_data = pd.json_normalize(data["data"])
+        new_data.columns = [
+            "_id",
+            "FH_INSTRUMENT",
+            "FH_SYMBOL",
+            "FH_EXPIRY_DT",
+            "FH_STRIKE_PRICE",
+            "FH_OPTION_TYPE",
+            "FH_MARKET_TYPE",
+            "FH_OPENING_PRICE",
+            "FH_TRADE_HIGH_PRICE",
+            "FH_TRADE_LOW_PRICE",
+            "FH_CLOSING_PRICE",
+            "FH_LAST_TRADED_PRICE",
+            "FH_PREV_CLS",
+            "FH_SETTLE_PRICE",
+            "FH_TOT_TRADED_QTY",
+            "FH_TOT_TRADED_VAL",
+            "FH_OPEN_INT",
+            "FH_CHANGE_IN_OI",
+            "FH_MARKET_LOT",
+            "FH_TIMESTAMP",
+            "FH_UNDERLYING_VALUE",
+            "TIMESTAMP",
+        ]
 
-    new_data.columns = [
-        "_id",
-        "FH_INSTRUMENT",
-        "FH_SYMBOL",
-        "FH_EXPIRY_DT",
-        "FH_STRIKE_PRICE",
-        "FH_OPTION_TYPE",
-        "FH_MARKET_TYPE",
-        "FH_OPENING_PRICE",
-        "FH_TRADE_HIGH_PRICE",
-        "FH_TRADE_LOW_PRICE",
-        "FH_CLOSING_PRICE",
-        "FH_LAST_TRADED_PRICE",
-        "FH_PREV_CLS",
-        "FH_SETTLE_PRICE",
-        "FH_TOT_TRADED_QTY",
-        "FH_TOT_TRADED_VAL",
-        "FH_OPEN_INT",
-        "FH_CHANGE_IN_OI",
-        "FH_MARKET_LOT",
-        "FH_TIMESTAMP",
-        "FH_UNDERLYING_VALUE",
-        "TIMESTAMP",
-    ]
-
-    return new_data
+        return new_data
 
 
 def get_futures_prices(symbol, start, end):
@@ -121,12 +121,14 @@ def get_futures_prices(symbol, start, end):
         },
         inplace=True,
     )
+
+    new_df = new_df.drop_duplicates(subset=["FH_TIMESTAMP"], ignore_index=True)
     return new_df.set_index("FH_TIMESTAMP")
 
 
 def get_equity_prices(symbol, start, end):
-    start = datetime.datetime.strptime(start, "%d-%m-%Y")
-    end = datetime.datetime.strptime(end, "%d-%m-%Y")
+    start = datetime.datetime.strptime(start, "%Y-%m-%d")
+    end = datetime.datetime.strptime(end, "%Y-%m-%d")
     data = eq.get_price(start, end, symbol=symbol)
     # data = data.set_index('Date')
     data.rename(
@@ -146,8 +148,8 @@ def get_equity_prices(symbol, start, end):
 
 
 def get_index_prices(symbol, start, end):
-    start = datetime.datetime.strptime(start, "%d-%m-%Y")
-    end = datetime.datetime.strptime(end, "%d-%m-%Y")
+    start = datetime.datetime.strptime(start, "%Y-%m-%d")
+    end = datetime.datetime.strptime(end, "%Y-%m-%d")
     # print(ind.get_price(start_date=start_date, end_date=end_date, symbol="NIFTY 50"))
 
     data = ind.get_price(start_date=start, end_date=end, symbol=symbol)
