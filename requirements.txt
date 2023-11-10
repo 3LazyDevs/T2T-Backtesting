@@ -3,4 +3,8 @@ Flask
 plotly
 pandas
 matplotlib
+<<<<<<< HEAD
 nsedt
+=======
+nsedt
+>>>>>>> cdef1b8d696df1f267d0578ae5ff1f2bf6bc223c
