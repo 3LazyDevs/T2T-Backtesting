@@ -834,7 +834,7 @@ def report(index, lot_size):
     excel_df.index += 1
     excel_df.to_csv("reports/report.csv")
 
-    return excel
+    return excel_df
 
 
 def set_up():

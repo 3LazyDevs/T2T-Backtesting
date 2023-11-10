@@ -16,13 +16,14 @@ import futures as fut
 from json import dumps
 import RTT_1 as rtt
 import AB20 as ab20
+import highlow as hl
 
 app = Flask(__name__)
 
 
 lines = ["Open", "Close", "High", "Low"]
 systems = {1: "RTT", 2: "Akasha Bhumi", 3: "Highs Lows"}
-criteria = ["2 Days", "3 Days", "4 Days", "1 Week", "2 Weeks"]
+criteria = ["2 Days", "3 Days", "4 Days", "Weekly"]
 
 
 @app.route("/", methods=["POST", "GET"])
@@ -144,12 +145,85 @@ def index():
             )
 
         elif system == "3":
+            scripcode = request.form.get("scripcode")
+            start_date = request.form.get("start_date")
+            end_date = request.form.get("end_date")
+            entry_criteria = request.form.get("entry_criteria")
+            exit_criteria = request.form.get("exit_criteria")
+            entry_buffer = float(request.form.get("entry_buffer"))
+            exit_buffer = float(request.form.get("exit_buffer"))
+            msl = float(request.form.get("msl"))
+            bep = request.form.get("bep")
+            if not bep:
+                bep = "no"
+
+            info = [
+                scripcode,
+                "Close",
+                entry_buffer,
+                exit_buffer,
+                "2",
+                msl,
+                bep,
+                start_date,
+                end_date,
+            ]
+
+            info = tuple(info)
+            excel_df = hl.run(info)
+
+            with open("reports/report.csv", "r", newline="") as input_file:
+                # Create a csv.reader object
+                csv_reader = csv.reader(input_file)
+
+                # Read data from the input CSV file
+                data = list(csv_reader)
+
+            with open("reports/report.csv", "w", newline="") as output_file:
+                # Create a csv.writer object
+                csv_writer = csv.writer(output_file)
+
+                # Add contents of list as last row in the csv file
+                csv_writer.writerow(
+                    [
+                        "",
+                        "Scripcode",
+                        "Start Date",
+                        "End Date",
+                        "Entry Criteria",
+                        "Exit Criteria",
+                        "Entry Buffer",
+                        "Exit Buffer",
+                        "MSL",
+                        "BEP",
+                    ]
+                )
+                csv_writer.writerow(
+                    [
+                        "",
+                        scripcode,
+                        start_date,
+                        end_date,
+                        entry_criteria,
+                        exit_criteria,
+                        entry_buffer,
+                        exit_buffer,
+                        msl,
+                        bep,
+                    ]
+                )
+                csv_writer.writerow([""] * len(data[0]))
+                csv_writer.writerow([""] * len(data[0]))
+                csv_writer.writerows(data)
+
             return render_template(
                 "index.html",
                 data=None,
                 lines=lines,
                 systems=systems,
                 downflag=True,
+                system="HighLow",
+                scripcode=scripcode,
                 criteria=criteria,
             )
         else:
@@ -161,6 +235,7 @@ def index():
         lines=lines,
         systems=systems,
         downflag=False,
+        criteria=criteria,
     )
 
 

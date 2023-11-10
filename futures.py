@@ -68,6 +68,10 @@ def get_futures_prices(symbol, start, end):
     while res_date <= end:
         dates.append(str(res_date.strftime("%d-%m-%Y")))
         res_date += datetime.timedelta(days=30)
+        if end - start >= datetime.timedelta(days=29):
+            dates.append(
+                str((res_date - datetime.timedelta(days=1)).strftime("%d-%m-%Y"))
+            )
     dates.append(str(end.strftime("%d-%m-%Y")))
     for i in range(len(dates) - 1):
         data = futures(symbol, dates[i], dates[i + 1])
@@ -124,11 +128,12 @@ def get_futures_prices(symbol, start, end):
 
     new_df = new_df.drop_duplicates(subset=["FH_TIMESTAMP"], ignore_index=True)
     return new_df.set_index("FH_TIMESTAMP")
+    # return data
 
 
 def get_equity_prices(symbol, start, end):
-    start = datetime.datetime.strptime(start, "%Y-%m-%d")
-    end = datetime.datetime.strptime(end, "%Y-%m-%d")
+    start = datetime.datetime.strptime(start, "%d-%m-%Y")
+    end = datetime.datetime.strptime(end, "%d-%m-%Y")
     data = eq.get_price(start, end, symbol=symbol)
     # data = data.set_index('Date')
     data.rename(
@@ -148,8 +153,8 @@ def get_equity_prices(symbol, start, end):
 
 
 def get_index_prices(symbol, start, end):
-    start = datetime.datetime.strptime(start, "%Y-%m-%d")
-    end = datetime.datetime.strptime(end, "%Y-%m-%d")
+    start = datetime.datetime.strptime(start, "%d-%m-%Y")
+    end = datetime.datetime.strptime(end, "%d-%m-%Y")
     # print(ind.get_price(start_date=start_date, end_date=end_date, symbol="NIFTY 50"))
 
     data = ind.get_price(start_date=start, end_date=end, symbol=symbol)
