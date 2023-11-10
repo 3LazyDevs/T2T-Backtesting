@@ -668,25 +668,29 @@ def report(bep, index, lot_size):
 
         except:
             pass
-
-    if index[1] == "FUT":
-        trades[-1]["Lot_Size"] = lot_size
-
-    trades[-1]["System"] = "High-Low"
-
     excel_df = pd.DataFrame()
-    for i in trades:
-        row = pd.DataFrame([i])
-        excel_df = pd.concat([excel_df, row], ignore_index=True)
+    try:
+        if index[1] == "FUT":
+            trades[-1]["Lot_Size"] = lot_size
 
-    print("\nexcel after appending:")
-    print(excel_df)
-    print("\n\n")
-    excel_df = excel_df.drop(["Previous High", "Previous Low", "Stop_Loss"], axis=1)
-    if index[1] == "FUT":
-        excel_df = excel_df.iloc[:, [11, 2, 5, 0, 9, 3, 4, 6, 10, 1, 7, 8]]
-    else:
-        excel_df = excel_df.iloc[:, [10, 2, 5, 0, 3, 4, 6, 9, 1, 7, 8]]
+        trades[-1]["System"] = "High-Low"
+
+        for i in trades:
+            row = pd.DataFrame([i])
+            excel_df = pd.concat([excel_df, row], ignore_index=True)
+
+        print("\nexcel after appending:")
+        print(excel_df)
+        print("\n\n")
+        excel_df = excel_df.drop(["Previous High", "Previous Low", "Stop_Loss"], axis=1)
+        if index[1] == "FUT":
+            excel_df = excel_df.iloc[:, [11, 2, 5, 0, 9, 3, 4, 6, 10, 1, 7, 8]]
+        else:
+            excel_df = excel_df.iloc[:, [10, 2, 5, 0, 3, 4, 6, 9, 1, 7, 8]]
+
+        excel_df.index += 1
+    except:
+        pass
     excel_df.rename(
         columns={
             "Entry_Date": "Entry Date",
@@ -700,7 +704,7 @@ def report(bep, index, lot_size):
         },
         inplace=True,
     )
-    excel_df.index += 1
+
     excel_df.to_csv("reports/report.csv")
 
     return excel_df
@@ -831,5 +835,5 @@ def run(info):
 
 
 # print(trades)
-# info = ("NIFTY FUT", "Close", 0.225, 0.225, 2, 2.25, "yes", "2021-01-01", "2022-12-31")
+# info = ("NIFTY FUT", "Close", 0.225, 0.225, 2, 2.25, "yes", "2021-01-01", "2021-01-05")
 # run(info)
