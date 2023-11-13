@@ -838,7 +838,7 @@ def report(index, lot_size):
         inplace=True,
     )
     print(excel_df)
-    excel_df.to_csv("reports/report.csv")
+    # excel_df.to_csv("reports/report.csv")
 
     return excel_df
 

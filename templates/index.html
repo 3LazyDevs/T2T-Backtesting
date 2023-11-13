@@ -174,14 +174,15 @@
         </div>
         {% if downflag %}
           <div class="download" style="float: right">
-            <a href="/getPlotCSV"><button type="button" class="btn btn-warning btn-simple" id="download" name="download">Download .csv</button></a>
+            <a href="/getPlotCSV/{{filename}}"><button type="button" class="btn btn-warning btn-simple" id="download" name="download">Download .csv</button></a>
           </div>
         {% endif %}
+          
         
       </form>
     </div>
   </div>
-
+  <input type="hidden" name="filename" id="filename" value="{{filename}}">
 <!-- example chart -->
 {% if data %}
   <div class="content">
@@ -284,6 +285,7 @@ if (window.history.replaceState) {
 }
 </script>
 <script>
+  var filename = document.getElementById("filename").value;
   // Add event listener to the download button
   document.getElementById("download").addEventListener("click", function(event) {
     // Prevent default behavior of the anchor tag
@@ -293,10 +295,10 @@ if (window.history.replaceState) {
     var downloadLink = document.createElement("a");
     
     // Set the href attribute to the download endpoint URL
-    downloadLink.href = "/getPlotCSV";
+    downloadLink.href =  `/getPlotCSV/${filename}`;
     
     // Set the download attribute to specify the file name
-    downloadLink.download = "myreport.csv";
+    downloadLink.download = `${filename}.csv`;
     
     // Append the anchor element to the body
     document.body.appendChild(downloadLink);

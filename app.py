@@ -1,12 +1,14 @@
 from flask import (
     Flask,
     Response,
+    after_this_request,
     render_template,
     request,
     redirect,
     url_for,
     send_file,
 )
+import uuid
 import plotly.express as px
 import pandas as pd
 import os
@@ -29,6 +31,7 @@ criteria = ["2 Days", "3 Days", "4 Days", "Weekly"]
 @app.route("/", methods=["POST", "GET"])
 def index():
     if request.method == "POST":
+        user = uuid.uuid1()
         system = request.form.get("system")
 
         if system == "1":
@@ -54,19 +57,20 @@ def index():
             ]
             info = tuple(info)
             excel_df = rtt.run(info)
+            excel_df.to_csv(f"reports/{user}.csv")
             # fig.update_layout(plot_bgcolor='#27293d')
             # fig.update_layout(paper_bgcolor='#27293d')
             # fig.update_layout(font_color='#ffffff')
             # plot_div = excel_df.to_html()
 
-            with open("reports/report.csv", "r", newline="") as input_file:
+            with open(f"reports/{user}.csv", "r", newline="") as input_file:
                 # Create a csv.reader object
                 csv_reader = csv.reader(input_file)
 
                 # Read data from the input CSV file
                 data = list(csv_reader)
 
-            with open("reports/report.csv", "w", newline="") as output_file:
+            with open(f"reports/{user}.csv", "w", newline="") as output_file:
                 # Create a csv.writer object
                 csv_writer = csv.writer(output_file)
 
@@ -107,6 +111,7 @@ def index():
                 downflag=True,
                 system="RTT",
                 scripcode=scripcode,
+                filename=user,
             )
 
         elif system == "2":
@@ -239,11 +244,11 @@ def index():
     )
 
 
-@app.route("/getPlotCSV")
-def getPlotCSV():
+@app.route("/getPlotCSV/<filename>")
+def getPlotCSV(filename):
     try:
         # Read the CSV file content as a string
-        with open("reports/report.csv", "r") as fp:
+        with open(f"reports/{filename}.csv", "r") as fp:
             csv_content = fp.read()
             csv_system = csv_content.split("\n")[5].split(",")[1]
             csv_scrip = csv_content.split("\n")[1].split(",")[1]
@@ -252,7 +257,7 @@ def getPlotCSV():
 
         # Send the CSV file as a response
         response = send_file(
-            "reports/report.csv",
+            f"reports/{filename}.csv",
             mimetype="text/csv",
             as_attachment=True,
             download_name=f"{csv_system}-{csv_scrip} {csv_sdate}_{csv_edate}.csv",
@@ -279,5 +284,5 @@ def get_suggestions():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-    # app.run(debug=True)
+    # app.run(host="0.0.0.0", port=5000, threaded=True)
+    app.run(debug=True)
