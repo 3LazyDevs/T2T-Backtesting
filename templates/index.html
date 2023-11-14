@@ -309,9 +309,19 @@ if (window.history.replaceState) {
     // Remove the anchor element from the DOM
     document.body.removeChild(downloadLink);
     
-    // Reload the page after the download is initiated
-    location.reload();
+    setTimeout(function() {
+      // Make an asynchronous request to the deleteFile route
+      fetch(`/deleteFile/${filename}`)
+      .then((response) => response.text())
+      .then((message) => console.log(message))
+      .catch((error) => console.error("Error:", error));
+      
+      // Reload the page after the download is initiated
+      location.reload();
+    }, 1000);
+
   });
+    
 </script>
 {% endblock %}
 

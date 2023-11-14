@@ -1,3 +1,4 @@
+import time
 from flask import (
     Flask,
     Response,
@@ -255,15 +256,22 @@ def getPlotCSV(filename):
             csv_sdate = csv_content.split("\n")[1].split(",")[2]
             csv_edate = csv_content.split("\n")[1].split(",")[3]
 
-        # Send the CSV file as a response
-        response = send_file(
+        # # Send the CSV file as a response
+        # @after_this_request
+        # def delete_file(response):
+        #     time.sleep(2)
+        #     try:
+        #         os.remove(f"reports/{filename}.csv")
+        #     except Exception as e:
+        #         app.logger.error(f"Error deleting file: {e}")
+        #     return response
+
+        return send_file(
             f"reports/{filename}.csv",
             mimetype="text/csv",
             as_attachment=True,
             download_name=f"{csv_system}-{csv_scrip} {csv_sdate}_{csv_edate}.csv",
         )
-
-        return response
 
     except Exception as e:
         print(f"Error: {e}")
@@ -283,6 +291,26 @@ def get_suggestions():
     return dumps(suggestions)
 
 
+@app.route("/deleteFile/<filename>")
+def delete_file(filename):
+    try:
+        # Specify the path to the reports folder
+        reports_folder = "reports"
+
+        # Construct the full path to the file
+        file_path = os.path.join(reports_folder, f"{filename}.csv")
+
+        # Check if the file exists before attempting to delete
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            return f"File '{filename}.csv' deleted successfully."
+        else:
+            return f"File '{filename}.csv' not found."
+
+    except Exception as e:
+        return f"Error: {e}"
+
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, threaded=True)
-    # app.run(debug=True)
+    # app.run(host="0.0.0.0", port=5000, threaded=True)
+    app.run(debug=True)
