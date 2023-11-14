@@ -52,7 +52,7 @@ def trade(
     buffer_high = prev_hl["High"] + buff_top  # High + buffer
     buffer_low = prev_hl["Low"] - buff_bottom  # Low - buffer
 
-    print("called")
+    # print("called")
     # calculate if the candle is a red candle or green candle
     if val_close > val_open:
         candle = "Green"
@@ -78,7 +78,7 @@ def trade(
             if (val_open > buffer_high or val_high > buffer_high) and (
                 val_open < buffer_low or val_low < buffer_low
             ):
-                print("anomaly")
+                # print("anomaly")
                 anomaly = True
                 check_backtesting_anomaly(
                     val_open,
@@ -160,7 +160,7 @@ def trade(
                     and trades[-1]["Trade_LS"] == "Long"
                     and bep == "yes"
                 ):
-                    print("Entered BEP")
+                    # print("Entered BEP")
                     buy = trades[-1]["Entry_Value"]
                     tsl = trades[-1]["Stop_Loss"]
                     if tsl == buy:
@@ -256,7 +256,8 @@ def trade(
                     )
 
         except Exception as e:
-            print("trade error", e)
+            # print("trade error", e)
+            pass
 
 
 def Buy(
@@ -272,10 +273,11 @@ def Buy(
     fig,
     bep,
 ):
+    global prev_hls
     if trades and trades[-1]["Trade_LS"] == "Short":
         trades[-1]["HH/LL"] = val_low
-
-    print("Buy", ind_date[i])
+    prev_hls["HH"] = val_high
+    # print("Buy", ind_date[i])
     # print(trades)
     # msl =  buffer_high - (buffer_high * risk_percent * 0.01)
     buy = buffer_high
@@ -328,9 +330,11 @@ def Sell(
     fig,
     bep,
 ):
+    global prev_hls
     if trades and trades[-1]["Trade_LS"] == "Long":
         trades[-1]["HH/LL"] = val_high
-    print("Sell", ind_date[i])
+    # print("Sell", ind_date[i])
+    prev_hls["LL"] = val_low
     # print(trades)
     # msl =  buffer_low + (buffer_low * risk_percent * 0.01)
     sell = buffer_low
@@ -387,19 +391,15 @@ def trade_exit(
     global prev_hls
     try:
         tsl = trades[-1]["Stop_Loss"]
-        print(
-            f"tsl = {tsl}, date = {date_val.strftime('%Y-%m-%d')} & ",
-            trades[-1]["Entry_Date"],
-            candle,
-        )
-        print(trades[-1]["Action"], trades[-1]["Trade_LS"])
+        # print(f"tsl = {tsl}, date = {date_val.strftime('%Y-%m-%d')} & ", trades[-1]["Entry_Date"], candle)
+        # print(trades[-1]["Action"], trades[-1]["Trade_LS"])
         if (
             trades[-1]["Action"] == "Buy" and trades[-1]["Trade_LS"] == "Long"
         ):  # and (val_open > val_close)#
             if (
                 date_val.strftime("%Y-%m-%d") == trades[-1]["Entry_Date"]
             ) and candle == "Green":
-                print("passed green candle")
+                # print("passed green candle")
                 pass
             else:
                 buff_exit = prev_hl["Low"] - (prev_hl["Low"] * exit_buff * 0.01)
@@ -409,7 +409,7 @@ def trade_exit(
                     trades[-1]["Exit_Date"] = date_val.strftime("%Y-%m-%d")
                     if sl == tsl:
                         trades[-1]["Trade_LS"] = "MSL"
-                        print("TSL = ", sl)
+                        # print("TSL = ", sl)
                     else:
                         trades[-1]["Trade_LS"] = "SAR"
 
@@ -469,7 +469,7 @@ def trade_exit(
                     )
                     if sl == tsl:
                         trades[-1]["Trade_LS"] = "MSL"
-                        print("TSL = ", sl)
+                        # print("TSL = ", sl)
                     else:
                         trades[-1]["Trade_LS"] = "SAR"
 
@@ -478,8 +478,25 @@ def trade_exit(
                         sl = val_open
                     else:
                         trades[-1]["Exit_Value"] = round(sl, 2)
+
+                    fig.add_annotation(
+                        x=date_val,
+                        y=sl,
+                        ax=20,
+                        ay=50,
+                        text="Exit<br>" + str(sl),
+                        showarrow=True,
+                        arrowhead=5,
+                        bordercolor="#c7c7c7",
+                        borderwidth=2,
+                        borderpad=4,
+                        bgcolor="#ff7f0e",
+                        opacity=0.8,
+                    )
+
     except Exception as e:
-        print("Exit error", e)
+        # print("Exit error", e)
+        pass
 
 
 def check_backtesting_anomaly(
@@ -679,9 +696,9 @@ def report(bep, index, lot_size):
             row = pd.DataFrame([i])
             excel_df = pd.concat([excel_df, row], ignore_index=True)
 
-        print("\nexcel after appending:")
-        print(excel_df)
-        print("\n\n")
+        # print("\nexcel after appending:")
+        # print(excel_df)
+        # print("\n\n")
         excel_df = excel_df.drop(["Previous High", "Previous Low", "Stop_Loss"], axis=1)
         if index[1] == "FUT":
             excel_df = excel_df.iloc[:, [11, 2, 5, 0, 9, 3, 4, 6, 10, 1, 7, 8]]
@@ -705,7 +722,7 @@ def report(bep, index, lot_size):
         inplace=True,
     )
 
-    excel_df.to_csv("reports/report.csv")
+    # excel_df.to_csv("report_high-low.csv")
 
     return excel_df
 
@@ -761,7 +778,7 @@ def run(info):
     ind_date = pd.Index.tolist(ind_history[line].index)
     ind_vals = [float(ele) for ele in pd.Series.tolist(ind_history[line])]
 
-    print(ind_history)
+    # print(ind_history)
 
     ind_open = [
         float(ele) for ele in pd.Series.tolist(ind_history["Open"])
@@ -826,14 +843,17 @@ def run(info):
                 msl,
             )
         except Exception as e:
-            print("for loop error", e)
+            # print("for loop error", e)
+            pass
     # fig.show()
     if index[1] == "FUT":
-        report(bep, index, lot_size)
+        excel_df = report(bep, index, lot_size)
     else:
-        report(bep, index, 1)
+        excel_df = report(bep, index, 1)
+
+    return excel_df
 
 
 # print(trades)
-# info = ("NIFTY FUT", "Close", 0.225, 0.225, 2, 2.25, "yes", "2021-01-01", "2021-01-05")
+# info = ("NIFTY FUT", "Close", 0.225, 0.225, 2, 2.25, "yes", "2021-01-01", "2022-12-01")
 # run(info)

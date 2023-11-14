@@ -130,6 +130,11 @@
           {% endfor %}
         </div>
         </div>
+
+<!-- note for Akasha Bhumi -->
+        <div class="note form-group">
+          <p><strong>Note: </strong>"Day Averages" number of trading days are taken to calculate the simple moving averages</p>
+        </div>
 <!-- bep rule checkbox -->
         <div class="form-group col-md-4 form-check stop-loss-group" >
           <label class="form-check-label">
@@ -184,7 +189,7 @@
   </div>
   <input type="hidden" name="filename" id="filename" value="{{filename}}">
 <!-- example chart -->
-{% if data %}
+<!-- {% if data %}
   <div class="content">
       <div class="row">
         <div class="col-12">
@@ -192,8 +197,8 @@
             <div class="card-header ">
               <div class="row">
                 <div class="col-sm-6 text-left">
-                  <!-- <h5 class="card-category" >{{line |default('')}}</h5>
-                  <h2 class="card-title" >^NSEI</h2> -->
+                  <h5 class="card-category" >{{line |default('')}}</h5>
+                  <h2 class="card-title" >^NSEI</h2>
                 </div>
               </div>
             </div>
@@ -214,115 +219,8 @@
         </div>
       </div>
   </div>
-{% endif %}
+{% endif %} -->
 <script src="static\js\conditions.js"></script>
-<script>
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById("start_date").setAttribute("max", today);
-  document.getElementById("end_date").setAttribute("max", today);
-</script>
-
-<script>
-  document.getElementById("start_date").addEventListener("change", function() {
-    var start_date = document.getElementById("start_date").value;
-    document.getElementById("end_date").setAttribute("min", start_date);
-  });
-</script>
-
-<script>
-  function getSuggestions(input) {
-    // Get the suggestions box element
-    var suggestionsBox = document.getElementById("suggestions-box");
-
-    // Hide the suggestions box if the input is empty
-    if (input.trim() === '') {
-        suggestionsBox.style.display = "none";
-        return;
-    }
-    
-    // Make an AJAX request to the server with the user input
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "/getSuggestions?input=" + input, true);
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            // Parse the JSON response from the server
-            var suggestions = JSON.parse(xhr.responseText);
-            
-            // Clear previous suggestions
-            suggestionsBox.innerHTML = "";
-            
-            // Populate the suggestions box with new suggestions
-            suggestions.forEach(function(suggestion) {
-                var suggestionItem = document.createElement("div");
-                suggestionItem.textContent = suggestion;
-                suggestionItem.classList.add("suggestion-item");
-                
-                // Handle suggestion item click (optional)
-                suggestionItem.addEventListener("click", function() {
-                    document.getElementById("scripcode").value = suggestion;
-                    suggestionsBox.style.display = "none";
-                });
-                
-                suggestionsBox.appendChild(suggestionItem);
-            });
-            
-            // Show the suggestions box
-            suggestionsBox.style.display = "block";
-        }
-    };
-    xhr.send();
-}
-
-</script>
-<script>
-  // Check if the page was loaded from a form submission
-if (window.history.replaceState) {
-  // Prevent form resubmission and perform a hard refresh
-  window.history.replaceState(null, null, window.location.href);
-} else {
-  // If window.history.replaceState is not supported, fallback to a regular reload
-  window.location.href = window.location.href;
-}
-</script>
-<script>
-  var filename = document.getElementById("filename").value;
-  // Add event listener to the download button
-  document.getElementById("download").addEventListener("click", function(event) {
-    // Prevent default behavior of the anchor tag
-    event.preventDefault();
-
-    // Create a new anchor element
-    var downloadLink = document.createElement("a");
-    
-    // Set the href attribute to the download endpoint URL
-    downloadLink.href =  `/getPlotCSV/${filename}`;
-    
-    // Set the download attribute to specify the file name
-    downloadLink.download = `${filename}.csv`;
-    
-    // Append the anchor element to the body
-    document.body.appendChild(downloadLink);
-    
-    // Programmatically trigger a click event on the anchor element
-    downloadLink.click();
-    
-    // Remove the anchor element from the DOM
-    document.body.removeChild(downloadLink);
-    
-    setTimeout(function() {
-      // Make an asynchronous request to the deleteFile route
-      fetch(`/deleteFile/${filename}`)
-      .then((response) => response.text())
-      .then((message) => console.log(message))
-      .catch((error) => console.error("Error:", error));
-      
-      // Reload the page after the download is initiated
-      location.reload();
-    }, 1000);
-
-  });
-    
-</script>
 {% endblock %}
 
 

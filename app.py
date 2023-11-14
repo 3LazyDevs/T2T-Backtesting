@@ -1,3 +1,4 @@
+from werkzeug.exceptions import HTTPException
 import time
 from flask import (
     Flask,
@@ -26,7 +27,16 @@ app = Flask(__name__)
 
 lines = ["Open", "Close", "High", "Low"]
 systems = {1: "RTT", 2: "Akasha Bhumi", 3: "Highs Lows"}
-criteria = ["2 Days", "3 Days", "4 Days", "Weekly"]
+criteria = ["2 Days"]  # , "3 Days", "4 Days", "Weekly"
+
+
+# Custom error handler for all HTTP errors
+@app.errorhandler(HTTPException)
+def handle_http_error(error):
+    return (
+        render_template("error.html", error_description=error.description),
+        error.code,
+    )
 
 
 @app.route("/", methods=["POST", "GET"])
@@ -117,7 +127,6 @@ def index():
 
         elif system == "2":
             scripcode = request.form.get("scripcode")
-            scripcode = scripcode.split()[0]
             start_date = request.form.get("start_date")
             end_date = request.form.get("end_date")
             entry_buffer = float(request.form.get("entry_buffer"))
@@ -125,6 +134,8 @@ def index():
             days = int(request.form.get("days"))
             msl = float(request.form.get("msl"))
             bep = request.form.get("bep")
+            if not bep:
+                bep = "no"
 
             info = [
                 scripcode,
@@ -140,14 +151,59 @@ def index():
             info = tuple(info)
             excel_df = ab20.run(info)
 
-            excel_df.to_csv("reports/report.csv")
+            excel_df.to_csv(f"reports/{user}.csv")
 
-            # with open("reports/report.csv", "r") as file:
-            #     csv_reader = csv.reader(file)
-            #     data = list(csv_reader)
+            with open(f"reports/{user}.csv", "r", newline="") as input_file:
+                # Create a csv.reader object
+                csv_reader = csv.reader(input_file)
+
+                # Read data from the input CSV file
+                data = list(csv_reader)
+
+            with open(f"reports/{user}.csv", "w", newline="") as output_file:
+                # Create a csv.writer object
+                csv_writer = csv.writer(output_file)
+
+                # Add contents of list as last row in the csv file
+                csv_writer.writerow(
+                    [
+                        "",
+                        "Scripcode",
+                        "Start Date",
+                        "End Date",
+                        "Entry Buffer",
+                        "Exit Buffer",
+                        "Days Average",
+                        "MSL",
+                        "BEP",
+                    ]
+                )
+                csv_writer.writerow(
+                    [
+                        "",
+                        scripcode,
+                        start_date,
+                        end_date,
+                        entry_buffer,
+                        exit_buffer,
+                        days,
+                        msl,
+                        bep,
+                    ]
+                )
+                csv_writer.writerow([""] * len(data[0]))
+                csv_writer.writerow([""] * len(data[0]))
+                csv_writer.writerows(data)
 
             return render_template(
-                "index.html", data=None, lines=lines, systems=systems, downflag=True
+                "index.html",
+                data=None,
+                lines=lines,
+                systems=systems,
+                downflag=True,
+                system=f"{days}AB",
+                scripcode=scripcode,
+                filename=user,
             )
 
         elif system == "3":
@@ -177,6 +233,7 @@ def index():
 
             info = tuple(info)
             excel_df = hl.run(info)
+            excel_df.to_csv(f"reports/{user}.csv")
 
             with open("reports/report.csv", "r", newline="") as input_file:
                 # Create a csv.reader object
@@ -231,6 +288,7 @@ def index():
                 system="HighLow",
                 scripcode=scripcode,
                 criteria=criteria,
+                filename=user,
             )
         else:
             return "FAIL"
@@ -251,20 +309,13 @@ def getPlotCSV(filename):
         # Read the CSV file content as a string
         with open(f"reports/{filename}.csv", "r") as fp:
             csv_content = fp.read()
-            csv_system = csv_content.split("\n")[5].split(",")[1]
+            try:
+                csv_system = csv_content.split("\n")[5].split(",")[1]
+            except:
+                csv_system = "System"
             csv_scrip = csv_content.split("\n")[1].split(",")[1]
             csv_sdate = csv_content.split("\n")[1].split(",")[2]
             csv_edate = csv_content.split("\n")[1].split(",")[3]
-
-        # # Send the CSV file as a response
-        # @after_this_request
-        # def delete_file(response):
-        #     time.sleep(2)
-        #     try:
-        #         os.remove(f"reports/{filename}.csv")
-        #     except Exception as e:
-        #         app.logger.error(f"Error deleting file: {e}")
-        #     return response
 
         return send_file(
             f"reports/{filename}.csv",

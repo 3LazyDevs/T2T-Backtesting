@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import plotly.express as px
 import plotly.graph_objects as go
-import csv
 
 # global prev_dict
 global excel_dict
@@ -48,7 +47,7 @@ def prev_tb(i, fig, ind_vals, ind_date, ind_history, line):
                 )
                 # fig.add_annotation(x = ind_history[line].index[i], y = ind_history[line][i], text = "Top<br>" + str(ind_vals[i]), showarrow= True)
                 # if(ind_date[i].strftime('%Y-%m-%d') < "2021-3-23" and ind_date[i].strftime('%Y-%m-%d') > "2021-4-7" ):
-                print(ind_vals[i - 1], ind_vals[i], ind_vals[i + 1], ind_date[i])
+                # print(ind_vals[i-1], ind_vals[i], ind_vals[i+1], ind_date[i])
                 prev_dict["Top"] = ind_vals[i]
             if (ind_vals[i - 1] > ind_vals[i]) and (ind_vals[i + 1] > ind_vals[i]):
                 # print(ind_vals[i], "Bottom", str(ind_date[i]))
@@ -327,7 +326,8 @@ def trade(
                 # print(f"day_count = {day_count}")
 
         except Exception as e:
-            print(e)
+            pass
+            # print(e)
 
 
 def Buy(
@@ -361,6 +361,7 @@ def Buy(
     threshold = buy + (buy * tsl_2 * 0.01)
     if val_high >= threshold:
         tsl = buy
+        # print(ind_date[i], tsl)
     # fig.add_trace(go.Scatter(x=[ind_history[line].index[i]], y=[buy], mode='markers', marker=dict(color='blue', size=12),showlegend=False, text=f"Action: Buy<br>Entry: {buy}<br>Date: {ind_date[i].strftime('%Y-%m-%d')}"))
     fig.add_annotation(
         x=ind_history[line].index[i],
@@ -811,10 +812,10 @@ def report(index, lot_size):
             row = pd.DataFrame([i])
             excel_df = pd.concat([excel_df, row], ignore_index=True)
 
-        print("\nexcel after appending:")
-        print(excel_df)
+        # print("\nexcel after appending:")
+        # print(excel_df)
         excel = excel_df
-        print("\n\n")
+        # print("\n\n")
         excel_df = excel_df.drop(["Prev_Top", "Prev_Bottom", "Stop_Loss"], axis=1)
         if index[1] == "FUT":
             excel_df = excel_df.iloc[:, [11, 2, 5, 0, 9, 3, 4, 6, 10, 1, 7, 8]]
@@ -837,7 +838,7 @@ def report(index, lot_size):
         },
         inplace=True,
     )
-    print(excel_df)
+    # print(excel_df)
     # excel_df.to_csv("reports/report.csv")
 
     return excel_df
@@ -896,7 +897,7 @@ def run(info):
     ind_date = pd.Index.tolist(ind_history[line].index)
     ind_vals = [float(ele) for ele in pd.Series.tolist(ind_history[line])]
 
-    print(ind_history)
+    # print(ind_history)
 
     ind_open = [
         float(ele) for ele in pd.Series.tolist(ind_history["Open"])
@@ -908,14 +909,13 @@ def run(info):
     ind_close = [
         float(ele) for ele in pd.Series.tolist(ind_history["Close"])
     ]  # close values
-    if index[1] == "FUT":
-        lot_size = [float(ele) for ele in pd.Series.tolist(ind_history["Lot Size"])]
-        lot_size = lot_size[-1]
+    lot_size = [float(ele) for ele in pd.Series.tolist(ind_history["Lot Size"])]
+    lot_size = lot_size[-1]
 
-    print("data type = ", type(ind_open[0]))
+    # print("data type = ", type(ind_open[0]))
 
     # ind_history = ind_history.drop(['Volume', 'Dividends', 'Stock Splits'],axis = 1)
-    print(type(ind_history))
+    # print(type(ind_history))
 
     candlestick_chart = go.Candlestick(
         x=ind_history[line].index,
@@ -962,13 +962,15 @@ def run(info):
                     line,
                 )
             except Exception as e:
-                print(e)
+                pass
+                # print(e)
 
             prev_dict = prev_tb(j, fig, ind_vals, ind_date, ind_history, line)
-    if index[1] == "FUT":
-        excel_df = report(index, lot_size)
-    else:
-        excel_df = report(index, 1)
+
+    excel_df = report(index, lot_size)
     # fig.show()
 
     return excel_df
+
+
+# run(("NIFTY FUT", "Close", 0.1, 0.1, 5, 1, 2, "2021-01-01", "2022-12-31"))
