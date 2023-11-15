@@ -56,7 +56,7 @@ def index():
             tsl2 = float(request.form.get("tsl2"))
 
             info = [
-                scripcode,
+                scripcode.upper(),
                 "Close",
                 entry_buffer,
                 exit_buffer,
@@ -101,7 +101,7 @@ def index():
                 csv_writer.writerow(
                     [
                         "",
-                        scripcode,
+                        scripcode.upper(),
                         start_date,
                         end_date,
                         entry_buffer,
@@ -138,7 +138,7 @@ def index():
                 bep = "no"
 
             info = [
-                scripcode,
+                scripcode.upper(),
                 "Close",
                 entry_buffer,
                 exit_buffer,
@@ -181,7 +181,7 @@ def index():
                 csv_writer.writerow(
                     [
                         "",
-                        scripcode,
+                        scripcode.upper(),
                         start_date,
                         end_date,
                         entry_buffer,
@@ -220,7 +220,7 @@ def index():
                 bep = "no"
 
             info = [
-                scripcode,
+                scripcode.upper(),
                 "Close",
                 entry_buffer,
                 exit_buffer,
@@ -235,14 +235,14 @@ def index():
             excel_df = hl.run(info)
             excel_df.to_csv(f"reports/{user}.csv")
 
-            with open("reports/report.csv", "r", newline="") as input_file:
+            with open(f"reports/{user}.csv", "r", newline="") as input_file:
                 # Create a csv.reader object
                 csv_reader = csv.reader(input_file)
 
                 # Read data from the input CSV file
                 data = list(csv_reader)
 
-            with open("reports/report.csv", "w", newline="") as output_file:
+            with open(f"reports/{user}.csv", "w", newline="") as output_file:
                 # Create a csv.writer object
                 csv_writer = csv.writer(output_file)
 
@@ -264,7 +264,7 @@ def index():
                 csv_writer.writerow(
                     [
                         "",
-                        scripcode,
+                        scripcode.upper(),
                         start_date,
                         end_date,
                         entry_criteria,
