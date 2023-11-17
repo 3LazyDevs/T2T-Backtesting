@@ -909,8 +909,10 @@ def run(info):
     ind_close = [
         float(ele) for ele in pd.Series.tolist(ind_history["Close"])
     ]  # close values
-    lot_size = [float(ele) for ele in pd.Series.tolist(ind_history["Lot Size"])]
-    lot_size = lot_size[-1]
+
+    if index[1] == "FUT":
+        lot_size = [float(ele) for ele in pd.Series.tolist(ind_history["Lot Size"])]
+        lot_size = lot_size[-1]
 
     # print("data type = ", type(ind_open[0]))
 
@@ -966,8 +968,10 @@ def run(info):
                 # print(e)
 
             prev_dict = prev_tb(j, fig, ind_vals, ind_date, ind_history, line)
-
-    excel_df = report(index, lot_size)
+    if index[1] == "FUT":
+        excel_df = report(index, lot_size)
+    else:
+        excel_df = report(index, 1)
     # fig.show()
 
     return excel_df
