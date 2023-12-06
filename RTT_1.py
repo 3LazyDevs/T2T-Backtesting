@@ -1,4 +1,5 @@
 # import yfinance as yf
+import mcx as mc
 import futures as ft
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -893,6 +894,8 @@ def run(info):
         ind_history = ft.get_futures_prices(index[0], start_date, end_date)
     elif index[1] == "EQ":
         ind_history = ft.get_equity_prices(index[0], start_date, end_date)
+    elif index[1] == "FUTCOM":
+        ind_history = mc.get_comm_prices(index[0], start_date, end_date)
 
     ind_date = pd.Index.tolist(ind_history[line].index)
     ind_vals = [float(ele) for ele in pd.Series.tolist(ind_history[line])]
