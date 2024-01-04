@@ -567,6 +567,7 @@ def check_backtesting_anomaly(
             fig,
         )
         Buy(
+            val_open,
             line,
             ind_history,
             ind_date,
@@ -601,6 +602,7 @@ def check_backtesting_anomaly(
                 fig,
             )
             Buy(
+                val_open,
                 line,
                 ind_history,
                 ind_date,
