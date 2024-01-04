@@ -840,7 +840,7 @@ def report(index, lot_size):
         inplace=True,
     )
     # print(excel_df)
-    # excel_df.to_csv("reports/report.csv")
+    excel_df.to_csv("reports/report.csv")
 
     return excel_df
 
@@ -980,4 +980,5 @@ def run(info):
     return excel_df
 
 
-# run(("NIFTY FUT", "Close", 0.1, 0.1, 5, 1, 2, "2021-01-01", "2022-12-31"))
+#* run(("NIFTY FUT", "Close", 0.1, 0.1, 5, 1, 2, "2021-01-01", "2022-12-31"))
+# run(("ALUMINIUM FUTCOM", "Close", 0.1, 0.1, 5, 1, 2, "2021-01-01", "2021-03-01"))

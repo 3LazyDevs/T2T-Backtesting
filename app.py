@@ -17,17 +17,19 @@ import os
 import csv
 from datetime import datetime as dt
 import futures as fut
+import mcx
 from json import dumps
 import RTT_1 as rtt
 import AB20 as ab20
-import highlow as hl
+import daywiseHL as dhl
+import BiweeklyHL as whl
 
 app = Flask(__name__)
 
 
 lines = ["Open", "Close", "High", "Low"]
-systems = {1: "RTT", 2: "Akasha Bhumi", 3: "Highs Lows"}
-criteria = ["2 Days"]  # , "3 Days", "4 Days", "Weekly"
+systems = {1: "RTT", 2: "2 Week High-Lows", 3: "Daily High-Lows"}
+criteria = ["2 Days", "3 Days", "4 Days"]
 
 
 # Custom error handler for all HTTP errors
@@ -124,13 +126,92 @@ def index():
                 filename=user,
             )
 
+        # elif system == "2":
+        #     scripcode = request.form.get("scripcode")
+        #     start_date = request.form.get("start_date")
+        #     end_date = request.form.get("end_date")
+        #     entry_buffer = float(request.form.get("entry_buffer"))
+        #     exit_buffer = float(request.form.get("exit_buffer"))
+        #     days = int(request.form.get("days"))
+        #     msl = float(request.form.get("msl"))
+        #     bep = request.form.get("bep")
+        #     if not bep:
+        #         bep = "no"
+
+        #     info = [
+        #         scripcode.upper(),
+        #         "Close",
+        #         entry_buffer,
+        #         exit_buffer,
+        #         days,
+        #         msl,
+        #         bep,
+        #         start_date,
+        #         end_date,
+        #     ]
+        #     info = tuple(info)
+        #     excel_df = ab20.run(info)
+
+        #     excel_df.to_csv(f"reports/{user}.csv")
+
+        #     with open(f"reports/{user}.csv", "r", newline="") as input_file:
+        #         # Create a csv.reader object
+        #         csv_reader = csv.reader(input_file)
+
+        #         # Read data from the input CSV file
+        #         data = list(csv_reader)
+
+        #     with open(f"reports/{user}.csv", "w", newline="") as output_file:
+        #         # Create a csv.writer object
+        #         csv_writer = csv.writer(output_file)
+
+        #         # Add contents of list as last row in the csv file
+        #         csv_writer.writerow(
+        #             [
+        #                 "",
+        #                 "Scripcode",
+        #                 "Start Date",
+        #                 "End Date",
+        #                 "Entry Buffer",
+        #                 "Exit Buffer",
+        #                 "Days Average",
+        #                 "MSL",
+        #                 "BEP",
+        #             ]
+        #         )
+        #         csv_writer.writerow(
+        #             [
+        #                 "",
+        #                 scripcode.upper(),
+        #                 start_date,
+        #                 end_date,
+        #                 entry_buffer,
+        #                 exit_buffer,
+        #                 days,
+        #                 msl,
+        #                 bep,
+        #             ]
+        #         )
+        #         csv_writer.writerow([""] * len(data[0]))
+        #         csv_writer.writerow([""] * len(data[0]))
+        #         csv_writer.writerows(data)
+
+        #     return render_template(
+        #         "index.html",
+        #         lines=lines,
+        #         systems=systems,
+        #         downflag=True,
+        #         system=f"{days}AB",
+        #         scripcode=scripcode,
+        #         filename=user,
+        #     )
+
         elif system == "2":
             scripcode = request.form.get("scripcode")
             start_date = request.form.get("start_date")
             end_date = request.form.get("end_date")
             entry_buffer = float(request.form.get("entry_buffer"))
             exit_buffer = float(request.form.get("exit_buffer"))
-            days = int(request.form.get("days"))
             msl = float(request.form.get("msl"))
             bep = request.form.get("bep")
             if not bep:
@@ -141,15 +222,14 @@ def index():
                 "Close",
                 entry_buffer,
                 exit_buffer,
-                days,
                 msl,
                 bep,
                 start_date,
                 end_date,
             ]
-            info = tuple(info)
-            excel_df = ab20.run(info)
 
+            info = tuple(info)
+            excel_df = whl.run(info)
             excel_df.to_csv(f"reports/{user}.csv")
 
             with open(f"reports/{user}.csv", "r", newline="") as input_file:
@@ -172,7 +252,6 @@ def index():
                         "End Date",
                         "Entry Buffer",
                         "Exit Buffer",
-                        "Days Average",
                         "MSL",
                         "BEP",
                     ]
@@ -185,7 +264,6 @@ def index():
                         end_date,
                         entry_buffer,
                         exit_buffer,
-                        days,
                         msl,
                         bep,
                     ]
@@ -199,7 +277,7 @@ def index():
                 lines=lines,
                 systems=systems,
                 downflag=True,
-                system=f"{days}AB",
+                system="WeeklyHighLow",
                 scripcode=scripcode,
                 filename=user,
             )
@@ -222,7 +300,7 @@ def index():
                 "Close",
                 entry_buffer,
                 exit_buffer,
-                "2",
+                int(entry_criteria.split(" ")[0]),
                 msl,
                 bep,
                 start_date,
@@ -230,7 +308,7 @@ def index():
             ]
 
             info = tuple(info)
-            excel_df = hl.run(info)
+            excel_df = dhl.run(info)
             excel_df.to_csv(f"reports/{user}.csv")
 
             with open(f"reports/{user}.csv", "r", newline="") as input_file:
@@ -330,9 +408,13 @@ def get_suggestions():
     # Get the user input from the query parameters
     user_input = request.args.get("input")
     options = fut.get_all_symbols_list()
+    commodities = mcx.get_comm_list()
 
     # Filter suggestions from the 'options' list based on user input
     suggestions = [option for option in options if user_input.lower() in option.lower()]
+    suggestions = suggestions + [
+        commodity for commodity in commodities if user_input.lower() in commodity.lower()
+    ]
 
     # Return the suggestions as a JSON response
     return dumps(suggestions)

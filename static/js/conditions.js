@@ -62,25 +62,45 @@ document.getElementById("system").addEventListener("change", function() {
       stopLossInputs[4].style.display = "block";
       stopLossInputs[5].style.display = "none";
       note[0].style.display = "none";
-  } else if (selectedSystem === "2") {
-      msl[0].setAttribute('required', '');
-      tsl1[0].removeAttribute('required');
-      tsl2[0].removeAttribute('required');
-      days[0].setAttribute('required', '');
-      entry_criteria[0].removeAttribute('required');
-      exit_criteria[0].removeAttribute('required');
-      // Show the required inputs for system 2
-      criteriaInputs[0].style.display = "none";
-      criteriaInputs[1].style.display = "none";
 
-      stopLossInputs[0].style.display = "block";
-      stopLossInputs[1].style.display = "none";
-      stopLossInputs[2].style.display = "none";
-      stopLossInputs[3].style.display = "block";
-      stopLossInputs[4].style.display = "none";
-      stopLossInputs[5].style.display = "block";
-      note[0].style.display = "block";
-      
+  // } else if (selectedSystem === "2") {
+  //     msl[0].setAttribute('required', '');
+  //     tsl1[0].removeAttribute('required');
+  //     tsl2[0].removeAttribute('required');
+  //     days[0].setAttribute('required', '');
+  //     entry_criteria[0].removeAttribute('required');
+  //     exit_criteria[0].removeAttribute('required');
+  //     // Show the required inputs for system 2
+  //     criteriaInputs[0].style.display = "none";
+  //     criteriaInputs[1].style.display = "none";
+
+  //     stopLossInputs[0].style.display = "block";
+  //     stopLossInputs[1].style.display = "none";
+  //     stopLossInputs[2].style.display = "none";
+  //     stopLossInputs[3].style.display = "block";
+  //     stopLossInputs[4].style.display = "none";
+  //     stopLossInputs[5].style.display = "block";
+  //     note[0].style.display = "block";
+  } else if (selectedSystem === "2") {
+    msl[0].setAttribute('required', '');
+    tsl1[0].removeAttribute('required');
+    tsl2[0].removeAttribute('required');
+    days[0].removeAttribute('required');
+
+    entry_criteria[0].removeAttribute('required');
+    exit_criteria[0].removeAttribute('required');
+    // Show the required inputs for system 3
+    criteriaInputs[0].style.display = "none";
+    criteriaInputs[1].style.display = "none";
+
+    stopLossInputs[0].style.display = "block";
+    stopLossInputs[1].style.display = "none";
+    stopLossInputs[2].style.display = "none";
+    stopLossInputs[3].style.display = "none";
+    stopLossInputs[4].style.display = "none";
+    stopLossInputs[5].style.display = "block";
+    note[0].style.display = "none";
+
   } else if (selectedSystem === "3") {
       msl[0].setAttribute('required', '');
       tsl1[0].removeAttribute('required');
