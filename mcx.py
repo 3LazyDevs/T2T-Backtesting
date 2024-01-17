@@ -67,13 +67,12 @@ def get_comm_list():
             "Accept-Language": "en-US,en;q=0.9",
             "Accept-Encoding": "gzip, deflate, br",
             "Connection": "keep-alive"}
-  date = (datetime.today() - timedelta(days=1))
+  date = (datetime.today() - timedelta(days=5))
   date = date.strftime('%Y-%m-%d')
   
   # print(date)
   date = datetime.strptime(date, '%Y-%m-%d')
-  date = str(date.year)+('0'+str(date.month) if date.month<10 else str(date.month))+('0'+str(date.day) if date.day<10 else str(start.day))
-  
+  date = str(date.year)+('0'+str(date.month) if date.month<10 else str(date.month))+('0'+str(date.day) if date.day<10 else str(date.day))
   dpayload = {'Date': date,'InstrumentName':'FUTCOM'}
   data = requests.post(url = durl, headers = dheaders, json = dpayload).json()
   data = [i.strip()+" FUTCOM" for i in pd.DataFrame(data['d']['Data'])['Symbol'].unique()]
