@@ -408,13 +408,17 @@ def get_suggestions():
     # Get the user input from the query parameters
     user_input = request.args.get("input")
     options = fut.get_all_symbols_list()
-    commodities = mcx.get_comm_list()
 
     # Filter suggestions from the 'options' list based on user input
     suggestions = [option for option in options if user_input.lower() in option.lower()]
-    suggestions = suggestions + [
-        commodity for commodity in commodities if user_input.lower() in commodity.lower()
-    ]
+
+    try:
+        commodities = mcx.get_comm_list()
+        suggestions = suggestions + [
+            commodity for commodity in commodities if user_input.lower() in commodity.lower()
+        ]
+    except:
+        pass
 
     # Return the suggestions as a JSON response
     return dumps(suggestions)
