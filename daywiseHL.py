@@ -59,7 +59,7 @@ def trade(bep, line, entry_buff, exit_buff, ind_history, val, val_open, val_high
                 prev_hls["LL"] = val_low
 
             if((val_open > buffer_high or val_high > buffer_high) and (val_open < buffer_low or val_low < buffer_low)):
-                # print("anomaly")
+                print("anomaly")
                 anomaly = True
                 check_backtesting_anomaly(val_open, entry_buff, exit_buff, bep, line, ind_history, ind_date, buffer_high, buffer_low, val_high, val_low, val_close, candle, i, msl, fig)
                 anomaly = False
@@ -151,11 +151,14 @@ def Buy(val_open, line, ind_history, ind_date, val_high, val_low, buffer_high, i
     fig.add_annotation(x = ind_history[line].index[i], y = buy, ax = 50, ay = -40, text = "Buy<br>" + str(buy), showarrow= True, arrowhead= 5)
     trades.append({"Action":"Buy", "Trade_LS": "Long", "Entry_Date" : ind_date[i].strftime("%Y-%m-%d"), "Previous High" :  prev_hl["High"], 
     "Previous Low" : prev_hl["Low"], "Entry_Value" : round(buy, 2),"Exit_Value" : 0, "Exit_Date": 0, "Profit_Loss" : 0, "Stop_Loss" : round(tsl, 2)})
+    if(anomaly == True):
+        trades[-1]["Entry_Value"] = trades[-2]["Exit_Value"]
     if(trades[-2]["Trade_LS"] == "Short"):
         trades[-2]["Trade_LS"] = "SAR"
 
 def Sell(val_open, line, ind_history, ind_date, val_low, val_high, buffer_low, i, msl, fig, bep):
     global prev_hls
+    global anomaly
     if(trades and trades[-1]["Trade_LS"] == "Long"):
        trades[-1]["HH/LL"] = val_high
     # print("Sell", ind_date[i])
@@ -173,6 +176,10 @@ def Sell(val_open, line, ind_history, ind_date, val_low, val_high, buffer_low, i
     fig.add_annotation(x = ind_history[line].index[i], y = sell, ax = 20, ay = 50, text = "Sell<br>" + str(sell), showarrow= True,arrowhead= 5)
     trades.append({"Action":"Sell", "Trade_LS": "Short", "Entry_Date" : ind_date[i].strftime("%Y-%m-%d"), "Previous High" :  prev_hl["High"], 
     "Previous Low" : prev_hl["Low"], "Entry_Value" : round(sell, 2),"Exit_Value" : 0, "Exit_Date": 0,"Profit_Loss" : 0, "Stop_Loss" : round(tsl, 2)})                          
+    if((trades[-1]["Entry_Value"] != trades[-2]["Exit_Value"]) and trades[-2]["Trade_LS"] == "SAR"):
+        trades[-1]["Entry_Value"] = trades[-2]["Exit_Value"] 
+    if(anomaly == True):
+        trades[-1]["Entry_Value"] = trades[-2]["Exit_Value"]
     if(trades[-2]["Trade_LS"] == "Long"):
         trades[-2]["Trade_LS"] = "SAR"
 
@@ -180,6 +187,7 @@ def Sell(val_open, line, ind_history, ind_date, val_low, val_high, buffer_low, i
 def trade_exit(entry_buff, exit_buff, ind_history, line, trades, val_open, val_close, val_high, val_low, date_val, candle, i, fig):
     global prev_hl
     global prev_hls
+    global anomaly
     try:
         tsl = trades[-1]["Stop_Loss"]
         # print(f"tsl = {tsl}, date = {date_val.strftime('%Y-%m-%d')} & ", trades[-1]["Entry_Date"], candle)
@@ -248,7 +256,7 @@ def check_backtesting_anomaly(val_open, entry_buff, exit_buff, bep, line, ind_hi
             pass
         else:
             trade_exit(entry_buff, exit_buff, ind_history, line, trades, val_open, val_close, val_high, val_low, ind_date[i], candle, i, fig)
-            Sell(line, ind_history, ind_date, val_low, val_high, buffer_low, i, msl, fig, bep) 
+            Sell(val_open,line, ind_history, ind_date, val_low, val_high, buffer_low, i, msl, fig, bep) 
         
         trade_exit(entry_buff, exit_buff, ind_history, line, trades, val_open, val_close, val_high, val_low, ind_date[i], candle, i, fig)
         Buy(val_open, line, ind_history, ind_date, val_high, val_low, buffer_high, i, msl, fig, bep)
@@ -261,7 +269,7 @@ def check_backtesting_anomaly(val_open, entry_buff, exit_buff, bep, line, ind_hi
             Buy(val_open, line, ind_history, ind_date, val_high,val_low, buffer_high, i, msl, fig, bep)
         
         trade_exit(entry_buff, exit_buff, ind_history, line, trades, val_open, val_close, val_high, val_low, ind_date[i], candle, i, fig)
-        Sell(line, ind_history, ind_date, val_low, val_high, buffer_low, i, msl, fig, bep) 
+        Sell(val_open, line, ind_history, ind_date, val_low, val_high, buffer_low, i, msl, fig, bep) 
 
 
 def report(bep, index, lot_size):
