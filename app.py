@@ -44,337 +44,345 @@ def handle_http_error(error):
 @app.route("/", methods=["POST", "GET"])
 def index():
     if request.method == "POST":
-        user = uuid.uuid1()
-        system = request.form.get("system")
+        try:
+            user = uuid.uuid1()
+            system = request.form.get("system")
 
-        if system == "1":
-            scripcode = request.form.get("scripcode")
-            start_date = request.form.get("start_date")
-            end_date = request.form.get("end_date")
-            entry_buffer = float(request.form.get("entry_buffer"))
-            exit_buffer = float(request.form.get("exit_buffer"))
-            # msl = float(request.form.get("msl"))
-            tsl1 = float(request.form.get("tsl1"))
-            tsl2 = float(request.form.get("tsl2"))
+            if system == "1":
+                scripcode = request.form.get("scripcode")
+                start_date = request.form.get("start_date")
+                end_date = request.form.get("end_date")
+                entry_buffer = float(request.form.get("entry_buffer"))
+                exit_buffer = float(request.form.get("exit_buffer"))
+                # msl = float(request.form.get("msl"))
+                tsl1 = float(request.form.get("tsl1"))
+                tsl2 = float(request.form.get("tsl2"))
 
-            info = [
-                scripcode.upper(),
-                "Close",
-                entry_buffer,
-                exit_buffer,
-                "5",
-                tsl1,
-                tsl2,
-                start_date,
-                end_date,
-            ]
-            info = tuple(info)
-            excel_df = rtt.run(info)
-            excel_df.to_csv(f"reports/{user}.csv")
-            # fig.update_layout(plot_bgcolor='#27293d')
-            # fig.update_layout(paper_bgcolor='#27293d')
-            # fig.update_layout(font_color='#ffffff')
-            # plot_div = excel_df.to_html()
+                info = [
+                    scripcode.upper(),
+                    "Close",
+                    entry_buffer,
+                    exit_buffer,
+                    "5",
+                    tsl1,
+                    tsl2,
+                    start_date,
+                    end_date,
+                ]
+                info = tuple(info)
+                excel_df = rtt.run(info)
+                excel_df.to_csv(f"reports/{user}.csv")
+                # fig.update_layout(plot_bgcolor='#27293d')
+                # fig.update_layout(paper_bgcolor='#27293d')
+                # fig.update_layout(font_color='#ffffff')
+                # plot_div = excel_df.to_html()
 
-            with open(f"reports/{user}.csv", "r", newline="") as input_file:
-                # Create a csv.reader object
-                csv_reader = csv.reader(input_file)
+                with open(f"reports/{user}.csv", "r", newline="") as input_file:
+                    # Create a csv.reader object
+                    csv_reader = csv.reader(input_file)
 
-                # Read data from the input CSV file
-                data = list(csv_reader)
+                    # Read data from the input CSV file
+                    data = list(csv_reader)
 
-            with open(f"reports/{user}.csv", "w", newline="") as output_file:
-                # Create a csv.writer object
-                csv_writer = csv.writer(output_file)
+                with open(f"reports/{user}.csv", "w", newline="") as output_file:
+                    # Create a csv.writer object
+                    csv_writer = csv.writer(output_file)
 
-                # Add contents of list as last row in the csv file
-                csv_writer.writerow(
-                    [
-                        "",
-                        "Scripcode",
-                        "Start Date",
-                        "End Date",
-                        "Entry Buffer",
-                        "Exit Buffer",
-                        "TSL1",
-                        "TSL2",
-                    ]
+                    # Add contents of list as last row in the csv file
+                    csv_writer.writerow(
+                        [
+                            "",
+                            "Scripcode",
+                            "Start Date",
+                            "End Date",
+                            "Entry Buffer",
+                            "Exit Buffer",
+                            "TSL1",
+                            "TSL2",
+                        ]
+                    )
+                    csv_writer.writerow(
+                        [
+                            "",
+                            scripcode.upper(),
+                            start_date,
+                            end_date,
+                            entry_buffer,
+                            exit_buffer,
+                            tsl1,
+                            tsl2,
+                        ]
+                    )
+                    csv_writer.writerow([""] * len(data[0]))
+                    csv_writer.writerow([""] * len(data[0]))
+                    csv_writer.writerows(data)
+
+                return render_template(
+                    "index.html",
+                    lines=lines,
+                    systems=systems,
+                    downflag=True,
+                    system="RTT",
+                    scripcode=scripcode,
+                    filename=user,
                 )
-                csv_writer.writerow(
-                    [
-                        "",
-                        scripcode.upper(),
-                        start_date,
-                        end_date,
-                        entry_buffer,
-                        exit_buffer,
-                        tsl1,
-                        tsl2,
-                    ]
+
+            # elif system == "2":
+            #     scripcode = request.form.get("scripcode")
+            #     start_date = request.form.get("start_date")
+            #     end_date = request.form.get("end_date")
+            #     entry_buffer = float(request.form.get("entry_buffer"))
+            #     exit_buffer = float(request.form.get("exit_buffer"))
+            #     days = int(request.form.get("days"))
+            #     msl = float(request.form.get("msl"))
+            #     bep = request.form.get("bep")
+            #     if not bep:
+            #         bep = "no"
+
+            #     info = [
+            #         scripcode.upper(),
+            #         "Close",
+            #         entry_buffer,
+            #         exit_buffer,
+            #         days,
+            #         msl,
+            #         bep,
+            #         start_date,
+            #         end_date,
+            #     ]
+            #     info = tuple(info)
+            #     excel_df = ab20.run(info)
+
+            #     excel_df.to_csv(f"reports/{user}.csv")
+
+            #     with open(f"reports/{user}.csv", "r", newline="") as input_file:
+            #         # Create a csv.reader object
+            #         csv_reader = csv.reader(input_file)
+
+            #         # Read data from the input CSV file
+            #         data = list(csv_reader)
+
+            #     with open(f"reports/{user}.csv", "w", newline="") as output_file:
+            #         # Create a csv.writer object
+            #         csv_writer = csv.writer(output_file)
+
+            #         # Add contents of list as last row in the csv file
+            #         csv_writer.writerow(
+            #             [
+            #                 "",
+            #                 "Scripcode",
+            #                 "Start Date",
+            #                 "End Date",
+            #                 "Entry Buffer",
+            #                 "Exit Buffer",
+            #                 "Days Average",
+            #                 "MSL",
+            #                 "BEP",
+            #             ]
+            #         )
+            #         csv_writer.writerow(
+            #             [
+            #                 "",
+            #                 scripcode.upper(),
+            #                 start_date,
+            #                 end_date,
+            #                 entry_buffer,
+            #                 exit_buffer,
+            #                 days,
+            #                 msl,
+            #                 bep,
+            #             ]
+            #         )
+            #         csv_writer.writerow([""] * len(data[0]))
+            #         csv_writer.writerow([""] * len(data[0]))
+            #         csv_writer.writerows(data)
+
+            #     return render_template(
+            #         "index.html",
+            #         lines=lines,
+            #         systems=systems,
+            #         downflag=True,
+            #         system=f"{days}AB",
+            #         scripcode=scripcode,
+            #         filename=user,
+            #     )
+
+            elif system == "2":
+                scripcode = request.form.get("scripcode")
+                start_date = request.form.get("start_date")
+                end_date = request.form.get("end_date")
+                entry_buffer = float(request.form.get("entry_buffer"))
+                exit_buffer = float(request.form.get("exit_buffer"))
+                msl = float(request.form.get("msl"))
+                bep = request.form.get("bep")
+                if not bep:
+                    bep = "no"
+
+                info = [
+                    scripcode.upper(),
+                    "Close",
+                    entry_buffer,
+                    exit_buffer,
+                    msl,
+                    bep,
+                    start_date,
+                    end_date,
+                ]
+
+                info = tuple(info)
+                excel_df = whl.run(info)
+                excel_df.to_csv(f"reports/{user}.csv")
+
+                with open(f"reports/{user}.csv", "r", newline="") as input_file:
+                    # Create a csv.reader object
+                    csv_reader = csv.reader(input_file)
+
+                    # Read data from the input CSV file
+                    data = list(csv_reader)
+
+                with open(f"reports/{user}.csv", "w", newline="") as output_file:
+                    # Create a csv.writer object
+                    csv_writer = csv.writer(output_file)
+
+                    # Add contents of list as last row in the csv file
+                    csv_writer.writerow(
+                        [
+                            "",
+                            "Scripcode",
+                            "Start Date",
+                            "End Date",
+                            "Entry Buffer",
+                            "Exit Buffer",
+                            "MSL",
+                            "BEP",
+                        ]
+                    )
+                    csv_writer.writerow(
+                        [
+                            "",
+                            scripcode.upper(),
+                            start_date,
+                            end_date,
+                            entry_buffer,
+                            exit_buffer,
+                            msl,
+                            bep,
+                        ]
+                    )
+                    csv_writer.writerow([""] * len(data[0]))
+                    csv_writer.writerow([""] * len(data[0]))
+                    csv_writer.writerows(data)
+
+                return render_template(
+                    "index.html",
+                    lines=lines,
+                    systems=systems,
+                    downflag=True,
+                    system="WeeklyHighLow",
+                    scripcode=scripcode,
+                    filename=user,
                 )
-                csv_writer.writerow([""] * len(data[0]))
-                csv_writer.writerow([""] * len(data[0]))
-                csv_writer.writerows(data)
 
-            return render_template(
-                "index.html",
-                lines=lines,
-                systems=systems,
-                downflag=True,
-                system="RTT",
-                scripcode=scripcode,
-                filename=user,
-            )
+            elif system == "3":
+                scripcode = request.form.get("scripcode")
+                start_date = request.form.get("start_date")
+                end_date = request.form.get("end_date")
+                entry_criteria = request.form.get("entry_criteria")
+                exit_criteria = request.form.get("exit_criteria")
+                entry_buffer = float(request.form.get("entry_buffer"))
+                exit_buffer = float(request.form.get("exit_buffer"))
+                msl = float(request.form.get("msl"))
+                bep = request.form.get("bep")
+                if not bep:
+                    bep = "no"
 
-        # elif system == "2":
-        #     scripcode = request.form.get("scripcode")
-        #     start_date = request.form.get("start_date")
-        #     end_date = request.form.get("end_date")
-        #     entry_buffer = float(request.form.get("entry_buffer"))
-        #     exit_buffer = float(request.form.get("exit_buffer"))
-        #     days = int(request.form.get("days"))
-        #     msl = float(request.form.get("msl"))
-        #     bep = request.form.get("bep")
-        #     if not bep:
-        #         bep = "no"
+                info = [
+                    scripcode.upper(),
+                    "Close",
+                    entry_buffer,
+                    exit_buffer,
+                    int(entry_criteria.split(" ")[0]),
+                    msl,
+                    bep,
+                    start_date,
+                    end_date,
+                ]
 
-        #     info = [
-        #         scripcode.upper(),
-        #         "Close",
-        #         entry_buffer,
-        #         exit_buffer,
-        #         days,
-        #         msl,
-        #         bep,
-        #         start_date,
-        #         end_date,
-        #     ]
-        #     info = tuple(info)
-        #     excel_df = ab20.run(info)
+                info = tuple(info)
+                excel_df = dhl.run(info)
+                excel_df.to_csv(f"reports/{user}.csv")
 
-        #     excel_df.to_csv(f"reports/{user}.csv")
+                with open(f"reports/{user}.csv", "r", newline="") as input_file:
+                    # Create a csv.reader object
+                    csv_reader = csv.reader(input_file)
 
-        #     with open(f"reports/{user}.csv", "r", newline="") as input_file:
-        #         # Create a csv.reader object
-        #         csv_reader = csv.reader(input_file)
+                    # Read data from the input CSV file
+                    data = list(csv_reader)
 
-        #         # Read data from the input CSV file
-        #         data = list(csv_reader)
+                with open(f"reports/{user}.csv", "w", newline="") as output_file:
+                    # Create a csv.writer object
+                    csv_writer = csv.writer(output_file)
 
-        #     with open(f"reports/{user}.csv", "w", newline="") as output_file:
-        #         # Create a csv.writer object
-        #         csv_writer = csv.writer(output_file)
+                    # Add contents of list as last row in the csv file
+                    csv_writer.writerow(
+                        [
+                            "",
+                            "Scripcode",
+                            "Start Date",
+                            "End Date",
+                            "Entry Criteria",
+                            "Exit Criteria",
+                            "Entry Buffer",
+                            "Exit Buffer",
+                            "MSL",
+                            "BEP",
+                        ]
+                    )
+                    csv_writer.writerow(
+                        [
+                            "",
+                            scripcode.upper(),
+                            start_date,
+                            end_date,
+                            entry_criteria,
+                            exit_criteria,
+                            entry_buffer,
+                            exit_buffer,
+                            msl,
+                            bep,
+                        ]
+                    )
+                    csv_writer.writerow([""] * len(data[0]))
+                    csv_writer.writerow([""] * len(data[0]))
+                    csv_writer.writerows(data)
 
-        #         # Add contents of list as last row in the csv file
-        #         csv_writer.writerow(
-        #             [
-        #                 "",
-        #                 "Scripcode",
-        #                 "Start Date",
-        #                 "End Date",
-        #                 "Entry Buffer",
-        #                 "Exit Buffer",
-        #                 "Days Average",
-        #                 "MSL",
-        #                 "BEP",
-        #             ]
-        #         )
-        #         csv_writer.writerow(
-        #             [
-        #                 "",
-        #                 scripcode.upper(),
-        #                 start_date,
-        #                 end_date,
-        #                 entry_buffer,
-        #                 exit_buffer,
-        #                 days,
-        #                 msl,
-        #                 bep,
-        #             ]
-        #         )
-        #         csv_writer.writerow([""] * len(data[0]))
-        #         csv_writer.writerow([""] * len(data[0]))
-        #         csv_writer.writerows(data)
-
-        #     return render_template(
-        #         "index.html",
-        #         lines=lines,
-        #         systems=systems,
-        #         downflag=True,
-        #         system=f"{days}AB",
-        #         scripcode=scripcode,
-        #         filename=user,
-        #     )
-
-        elif system == "2":
-            scripcode = request.form.get("scripcode")
-            start_date = request.form.get("start_date")
-            end_date = request.form.get("end_date")
-            entry_buffer = float(request.form.get("entry_buffer"))
-            exit_buffer = float(request.form.get("exit_buffer"))
-            msl = float(request.form.get("msl"))
-            bep = request.form.get("bep")
-            if not bep:
-                bep = "no"
-
-            info = [
-                scripcode.upper(),
-                "Close",
-                entry_buffer,
-                exit_buffer,
-                msl,
-                bep,
-                start_date,
-                end_date,
-            ]
-
-            info = tuple(info)
-            excel_df = whl.run(info)
-            excel_df.to_csv(f"reports/{user}.csv")
-
-            with open(f"reports/{user}.csv", "r", newline="") as input_file:
-                # Create a csv.reader object
-                csv_reader = csv.reader(input_file)
-
-                # Read data from the input CSV file
-                data = list(csv_reader)
-
-            with open(f"reports/{user}.csv", "w", newline="") as output_file:
-                # Create a csv.writer object
-                csv_writer = csv.writer(output_file)
-
-                # Add contents of list as last row in the csv file
-                csv_writer.writerow(
-                    [
-                        "",
-                        "Scripcode",
-                        "Start Date",
-                        "End Date",
-                        "Entry Buffer",
-                        "Exit Buffer",
-                        "MSL",
-                        "BEP",
-                    ]
+                return render_template(
+                    "index.html",
+                    lines=lines,
+                    systems=systems,
+                    downflag=True,
+                    system="HighLow",
+                    scripcode=scripcode,
+                    criteria=criteria,
+                    filename=user,
                 )
-                csv_writer.writerow(
-                    [
-                        "",
-                        scripcode.upper(),
-                        start_date,
-                        end_date,
-                        entry_buffer,
-                        exit_buffer,
-                        msl,
-                        bep,
-                    ]
-                )
-                csv_writer.writerow([""] * len(data[0]))
-                csv_writer.writerow([""] * len(data[0]))
-                csv_writer.writerows(data)
+            else:
+                return "FAIL"
+        except Exception as e:
+            with open("error.txt", "a") as f:
+                f.write(f"{dt.now()} - {e}\n")
+    try:
 
-            return render_template(
-                "index.html",
-                lines=lines,
-                systems=systems,
-                downflag=True,
-                system="WeeklyHighLow",
-                scripcode=scripcode,
-                filename=user,
-            )
-
-        elif system == "3":
-            scripcode = request.form.get("scripcode")
-            start_date = request.form.get("start_date")
-            end_date = request.form.get("end_date")
-            entry_criteria = request.form.get("entry_criteria")
-            exit_criteria = request.form.get("exit_criteria")
-            entry_buffer = float(request.form.get("entry_buffer"))
-            exit_buffer = float(request.form.get("exit_buffer"))
-            msl = float(request.form.get("msl"))
-            bep = request.form.get("bep")
-            if not bep:
-                bep = "no"
-
-            info = [
-                scripcode.upper(),
-                "Close",
-                entry_buffer,
-                exit_buffer,
-                int(entry_criteria.split(" ")[0]),
-                msl,
-                bep,
-                start_date,
-                end_date,
-            ]
-
-            info = tuple(info)
-            excel_df = dhl.run(info)
-            excel_df.to_csv(f"reports/{user}.csv")
-
-            with open(f"reports/{user}.csv", "r", newline="") as input_file:
-                # Create a csv.reader object
-                csv_reader = csv.reader(input_file)
-
-                # Read data from the input CSV file
-                data = list(csv_reader)
-
-            with open(f"reports/{user}.csv", "w", newline="") as output_file:
-                # Create a csv.writer object
-                csv_writer = csv.writer(output_file)
-
-                # Add contents of list as last row in the csv file
-                csv_writer.writerow(
-                    [
-                        "",
-                        "Scripcode",
-                        "Start Date",
-                        "End Date",
-                        "Entry Criteria",
-                        "Exit Criteria",
-                        "Entry Buffer",
-                        "Exit Buffer",
-                        "MSL",
-                        "BEP",
-                    ]
-                )
-                csv_writer.writerow(
-                    [
-                        "",
-                        scripcode.upper(),
-                        start_date,
-                        end_date,
-                        entry_criteria,
-                        exit_criteria,
-                        entry_buffer,
-                        exit_buffer,
-                        msl,
-                        bep,
-                    ]
-                )
-                csv_writer.writerow([""] * len(data[0]))
-                csv_writer.writerow([""] * len(data[0]))
-                csv_writer.writerows(data)
-
-            return render_template(
-                "index.html",
-                lines=lines,
-                systems=systems,
-                downflag=True,
-                system="HighLow",
-                scripcode=scripcode,
-                criteria=criteria,
-                filename=user,
-            )
-        else:
-            return "FAIL"
-
-    return render_template(
-        "index.html",
-        lines=lines,
-        systems=systems,
-        downflag=False,
-        criteria=criteria,
-    )
+        return render_template(
+            "index.html",
+            lines=lines,
+            systems=systems,
+            downflag=False,
+            criteria=criteria,
+        )
+    except Exception as e:
+        with open("error.txt", "a") as f:
+            f.write(f"{dt.now()} - {e}\n")
 
 
 @app.route("/getPlotCSV/<filename>")
@@ -445,5 +453,5 @@ def delete_file(filename):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, threaded=True)
+    app.run(host="0.0.0.0", port=80, threaded=True)
     # app.run(debug=True)
