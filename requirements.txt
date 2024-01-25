@@ -3,3 +3,7 @@ Flask
 plotly
 pandas
 matplotlib
+requests
+numpy
+pandas
+Deprecated
