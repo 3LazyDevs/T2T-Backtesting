@@ -30,31 +30,32 @@ def futures(symbol, start_date, end_date):
     data = utils.fetch_url(url, cookies, response_type="json")
     if data["data"]:
         new_data = pd.json_normalize(data["data"])
+        # print(new_data)
 
-        new_data.columns = [
-            "_id",
-            "FH_INSTRUMENT",
-            "FH_SYMBOL",
-            "FH_EXPIRY_DT",
-            "FH_STRIKE_PRICE",
-            "FH_OPTION_TYPE",
-            "FH_MARKET_TYPE",
-            "FH_OPENING_PRICE",
-            "FH_TRADE_HIGH_PRICE",
-            "FH_TRADE_LOW_PRICE",
-            "FH_CLOSING_PRICE",
-            "FH_LAST_TRADED_PRICE",
-            "FH_PREV_CLS",
-            "FH_SETTLE_PRICE",
-            "FH_TOT_TRADED_QTY",
-            "FH_TOT_TRADED_VAL",
-            "FH_OPEN_INT",
-            "FH_CHANGE_IN_OI",
-            "FH_MARKET_LOT",
-            "FH_TIMESTAMP",
-            "FH_UNDERLYING_VALUE",
-            "TIMESTAMP",
-        ]
+        # new_data.columns = [
+        #     "_id",
+        #     "FH_INSTRUMENT",
+        #     "FH_SYMBOL",
+        #     "FH_EXPIRY_DT",
+        #     "FH_STRIKE_PRICE",
+        #     "FH_OPTION_TYPE",
+        #     "FH_MARKET_TYPE",
+        #     "FH_OPENING_PRICE",
+        #     "FH_TRADE_HIGH_PRICE",
+        #     "FH_TRADE_LOW_PRICE",
+        #     "FH_CLOSING_PRICE",
+        #     "FH_LAST_TRADED_PRICE",
+        #     "FH_PREV_CLS",
+        #     "FH_SETTLE_PRICE",
+        #     "FH_TOT_TRADED_QTY",
+        #     "FH_TOT_TRADED_VAL",
+        #     "FH_OPEN_INT",
+        #     "FH_CHANGE_IN_OI",
+        #     "FH_MARKET_LOT",
+        #     "FH_TIMESTAMP",
+        #     "FH_UNDERLYING_VALUE",
+        #     "TIMESTAMP",
+        # ]
 
         return new_data
 
@@ -192,3 +193,6 @@ def get_all_symbols_list():
         eq_list.append(f"{item} FUT")
         eq_list.append(f"{item} EQ")
     return eq_list
+
+# data = get_futures_prices("TCS", "2024-05-25", "2024-06-25")
+# print(data)
