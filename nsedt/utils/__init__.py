@@ -69,8 +69,7 @@ def fetch_url(url, cookies, key=None, response_type="panda_df"):
     )
 
     if response.status_code == 200:
-        content = response.content.decode('utf-8', errors='ignore')
-        json_response = json.loads(content)
+        json_response = json.loads(response.content)
 
         if response_type != "panda_df":
             return json_response
